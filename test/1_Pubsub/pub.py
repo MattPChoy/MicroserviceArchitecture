@@ -1,4 +1,8 @@
-# example_publisher.py
+"""
+This publisher publishes to a particular queue. It is run from the command line using the following
+    command: python pub.py <queue-name>
+"""
+import sys
 import pika
 import logging
 
@@ -11,8 +15,13 @@ params.socket_timeout = 5
 
 connection = pika.BlockingConnection(params)  # Connect to CloudAMQP
 channel = connection.channel()  # start a channel
-channel.queue_declare(queue='test')  # Declare a queue
+q_name = sys.argv[1]
+channel.queue_declare(queue=q_name, durable=True)  # Declare a queue
 # send a message
 
+print(f"Publishing to {q_name}")
 while True:
-    channel.basic_publish(exchange='', routing_key='test', body=bytes(input("Send message to cons: "), 'utf-8'))
+    success = channel.basic_publish(exchange='', routing_key=f'{q_name}', body=bytes(input(f"{q_name}: "), 'utf-8'),
+                                    properties=pika.BasicProperties(delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE))
+    if success:
+        print("Message sent")

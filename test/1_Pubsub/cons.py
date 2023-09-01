@@ -1,30 +1,55 @@
-# example_consumer.py
+"""
+The consumer is run from the command line using the syntax python cons.py, it
+    consumes from both queue1 and queue2.
+"""
+import time
+
 import pika
+import signal
+import sys
+from multiprocessing import Process
 
 
-def do_work(msg):
-    print(
-        bytes.decode(msg, 'utf-8')
-    )
-    return
+def consume_channel(queue_name, callback):
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue=queue_name, durable=True)
+    channel.basic_consume(queue=queue_name,
+                          on_message_callback=lambda ch, method, properties, body: callback(ch, method, properties,
+                                                                                            body, queue_name),
+                          auto_ack=True)
+    print(f"Started consuming from {queue_name}")
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        pass  # Continue to exit
 
 
-# Access the CLODUAMQP_URL environment variable and parse it (fallback to localhost)
-url = 'amqp://guest:guest@localhost:5672/%2f'
-params = pika.URLParameters(url)
-connection = pika.BlockingConnection(params)
-channel = connection.channel()  # start a channel
-channel.queue_declare(queue='test')  # Declare a queue
+def callback(ch, method, properties, body, queue_name):
+    message = body.decode()
+    print(f"{queue_name}:{message}")
+    time.sleep(2)
 
 
-# create a function which is called on incoming messages
-def callback(ch, method, properties, body):
-    do_work(body)
+def exit_program(signum, frame):
+    print("Received Ctrl+C. Exiting.")
+    sys.exit(0)
 
 
-# set up subscription on the queue
-channel.basic_consume('test', callback, auto_ack=True)
+if __name__ == '__main__':
+    signal.signal(signal.SIGINT, exit_program)  # Register Ctrl+C handler
 
-# start consuming (blocks)
-channel.start_consuming()
-connection.close()
+    queue_name1 = 'queue1'
+    queue_name2 = 'queue2'
+
+    process1 = Process(target=consume_channel, args=(queue_name1, callback))
+    process2 = Process(target=consume_channel, args=(queue_name2, callback))
+
+    process1.start()
+    process2.start()
+
+    try:
+        process1.join()
+        process2.join()
+    except KeyboardInterrupt:
+        print("Exiting gracefully.")
