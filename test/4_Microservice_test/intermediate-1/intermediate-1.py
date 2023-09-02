@@ -14,10 +14,14 @@ write_chan.queue_declare(queue='intermediate-2', durable=True)
 
 
 def receive_msg(ch, method, properties, body):
-    res = body.decode('utf-8').split(' ').reverse()
-    res = res.join(' ')
+    res = body.decode('utf-8').split(" ")
+    res.reverse()
+    res = " ".join(res)
+    read_chan.basic_ack(delivery_tag=method.delivery_tag)
     write_chan.basic_publish(
-        exchange='', routing_key='intermediate-2', body=res, properties=pika.BasicProperties(delivery_mode=2))
+        exchange='', routing_key='intermediate-2', body=res,
+	properties=pika.BasicProperties(delivery_mode=2))
+    print(f"{res} ({body})")
 
 
 # to make sure the consumer receives only one message at a time

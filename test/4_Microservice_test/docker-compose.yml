@@ -1,7 +1,6 @@
 version: "3.2"
 services:
   rabbit_mq:
-
     # we use management image to get the
     # plugin for web dashboard
     image: rabbitmq:3.12-management
