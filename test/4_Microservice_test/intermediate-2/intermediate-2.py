@@ -20,7 +20,7 @@ def receive_msg(ch, method, properties, body):
 read_chan.basic_qos(prefetch_count=1)
 
 # define the queue consumption
-read_chan.basic_consume(queue='hello', on_message_callback=receive_msg)
+read_chan.basic_consume(queue='intermediate-2', on_message_callback=receive_msg)
 
 print("Waiting to consume")
 # start consuming
