@@ -2,7 +2,7 @@ import pika
 import time
 import os
 
-amqp_url = os.environ['AMQP_URL']
+amqp_url = os.environ.get('AMQP_URL', 'amqp://guest:guest@localhost/%2f')
 url_params = pika.URLParameters(amqp_url)
 
 connection = pika.BlockingConnection(url_params)

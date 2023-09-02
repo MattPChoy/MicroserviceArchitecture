@@ -8,7 +8,7 @@ import pika
 import os
 
 # read rabbitmq connection url from environment variable
-amqp_url = os.environ['AMQP_URL']
+amqp_url = os.environ.get('AMQP_URL', 'amqp://guest:guest@localhost/%2f')
 url_params = pika.URLParameters(amqp_url)
 
 # connect to rabbitmq
