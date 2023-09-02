@@ -1,0 +1,40 @@
+version: "3.2"
+services:
+  rabbit_mq:
+
+    # we use management image to get the
+    # plugin for web dashboard
+    image: rabbitmq:3.12-management
+    container_name: rabbit_mq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbit_mqdata:/usr/share/rabbitmq/data
+  requester:
+    build: requester
+    depends_on:
+      - rabbit_mq
+    environment:
+        AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    volumes:
+        - ./requester:/usr/src/app/requester
+  intermediate-1:
+    build: intermediate-1
+    depends_on:
+      - rabbit_mq
+    environment:
+        AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    volumes:
+        - ./intermediate-1:/usr/src/app/intermediate-1
+  intermediate-2:
+    build: intermediate-2
+    depends_on:
+      - rabbit_mq
+    environment:
+        AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    volumes:
+        - ./intermediate-2:/usr/src/app/intermediate-2
+volumes:
+    rabbit_mqdata:
+      driver: local
