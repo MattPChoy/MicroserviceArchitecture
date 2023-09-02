@@ -11,7 +11,8 @@ read_chan.queue_declare(queue='intermediate-2', durable=True)
 
 
 def receive_msg(ch, method, properties, body):
-    res = body.decode('utf-8').split(' ').reverse().join(' ')
+    res = (body.decode('utf-8').split(' ').reverse())
+    res = res.join(' ')
     print(res)
 
 
