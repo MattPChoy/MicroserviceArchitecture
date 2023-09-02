@@ -5,11 +5,12 @@ This publisher publishes to a particular queue. It is run from the command line 
 import sys
 import pika
 import logging
+from secrets import rabbitmq_credentials
 
 logging.basicConfig()
 
 # Parse (fallback to localhost)
-url = 'amqp://guest:guest@localhost/%2f'
+url = f'amqp://{rabbitmq_credentials["username"]}:{rabbitmq_credentials["password"]}@localhost/%2f'
 params = pika.URLParameters(url)
 params.socket_timeout = 5
 

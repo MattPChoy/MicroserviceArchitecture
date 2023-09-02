@@ -8,10 +8,12 @@ import pika
 import signal
 import sys
 from multiprocessing import Process
+from secrets import rabbitmq_credentials
 
 
 def consume_channel(queue_name, callback):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    creds = pika.PlainCredentials(rabbitmq_credentials["username"], rabbitmq_credentials["password"])
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost', credentials=creds))
     channel = connection.channel()
     channel.queue_declare(queue=queue_name, durable=True)
     channel.basic_consume(queue=queue_name,
