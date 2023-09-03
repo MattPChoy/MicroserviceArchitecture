@@ -35,6 +35,11 @@ for i in range(10000):
                        body=bytes(json.dumps(data), 'utf-8'),      properties=pika.BasicProperties(delivery_mode=2))
     print("Produced the message")
 
+chan.basic_publish(exchange='', routing_key="battery-management-service", body='{"event_type": "DUMP"}', 
+       properties=pika.BasicProperties(delivery_mode=2))
+
+
+
 # close the channel and connection
 # to avoid program from entering with any lingering
 # message in the queue cache

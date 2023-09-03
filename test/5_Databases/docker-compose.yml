@@ -9,6 +9,13 @@ services:
         - '15672:15672'
     volumes:
       - rabbit_mqdata:/usr/share/rabbitmq/data
+  bms-db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
   requester:
     build: requester
     depends_on:
@@ -28,3 +35,4 @@ services:
 volumes:
     rabbit_mqdata:
       driver: local
+    pgdata:

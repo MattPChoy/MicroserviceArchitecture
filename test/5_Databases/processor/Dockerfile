@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /usr/src/app/processor
 
-COPY requester.py .
+COPY processor.py .
 COPY database.db .
 
 CMD [ "python", "processor.py" ]
