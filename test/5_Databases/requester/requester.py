@@ -3,9 +3,9 @@ This Microservice is responsible for spamming the server with requests to proces
 """
 
 import pika
-
-import pika
 import os
+import random
+import json
 
 # read rabbitmq connection url from environment variable
 amqp_url = os.environ.get('AMQP_URL', 'amqp://guest:guest@localhost/%2f')
@@ -21,9 +21,18 @@ chan = connection.channel()
 chan.queue_declare(queue='intermediate-1', durable=True)
 
 # publish a 100 messages to the queue
-for i in range(100):
-    chan.basic_publish(exchange='', routing_key='intermediate-1',
-                       body=bytes(f'{i}Hello World', 'utf-8'),      properties=pika.BasicProperties(delivery_mode=2))
+for i in range(10000):
+    battery_name = random.choice(["Tesla Model S", "Tesla Model 3", "Tesla Model Y", "Tesla Model X", "Nissan Leaf"])
+    
+    data = {
+    	"event_type": "ADD_BATTERY",
+    	"capacity": random.randint(80,150),
+    	"owner_id": random.randint(1,100),
+    	"name": battery_name
+    }
+    
+    chan.basic_publish(exchange='', routing_key='battery-management-service',
+                       body=bytes(json.dumps(data), 'utf-8'),      properties=pika.BasicProperties(delivery_mode=2))
     print("Produced the message")
 
 # close the channel and connection

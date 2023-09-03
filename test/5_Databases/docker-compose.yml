@@ -1,0 +1,27 @@
+version: "3.2"
+
+services:
+    rabbit_mq:
+        image: rabbitmq:3.12-management
+        container_name: rabbit_mq
+        ports:
+            - '5672:5672'
+            - '15672:15672'
+        volumes:
+            - rabbit_mqdata:/usr/share/rabbitmq/data
+    requester:
+        build: requester
+        depends_on:
+            - rabbit_mq
+        environment:
+            AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+        volumes: 
+            - ./requester:/usr/src/app/requester
+    processor:
+        build: processor
+        depends_on:
+            - rabbit_mq
+        environment:
+            AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+        volumes: 
+            - ./processor:/usr/src/app/processor

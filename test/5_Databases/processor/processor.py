@@ -24,11 +24,14 @@ class Microservice():
             in_json = json.loads(body.decode('utf-8'))
             print(in_json)
             if in_json["event_type"] == "ADD_BATTERY":
-            	query=f"""INSERT INTO batteries VALUES({in_json['battery_id']}, {in_json['capacity']},
-                         {in_json['owner_id']}, {in_json['name']}"""
-                print(f"Query={query}")
-                self.db.execute()
-                cursor.commit()
+                query=f"""INSERT INTO batteries(capacity, owner_id, name) VALUES({in_json['capacity']}, {in_json['owner_id']}, '{in_json['name']}')"""
+                self.db.execute(query)
+                self.db.commit()
+            if in_json["event_type"] == "DUMP":
+            	query=f"""SELECT * FROM batteries"""
+            	res = self.db.execute(query)
+            	print(res.fetchall())
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 
