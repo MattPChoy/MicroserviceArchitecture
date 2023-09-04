@@ -10,3 +10,7 @@
 - The second generation of [5_Databases/processor] which (hopefully) successfully combines Pika, Docker and Postgres the behaviour is intended to be identical to that of the processor in 5_Databases.
 - Using some optimisations, I was able to get the speed of the microservice to perform 1,333 write operations per second.
 ![](./Microservice_Performance.png)
+
+By scaling up the number of instances of each service (processor=64, generator=2), we can achieve even greater performance
+
+![](./Microservice_Performance_Scaling.png)
