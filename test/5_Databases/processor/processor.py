@@ -7,12 +7,12 @@ from sqlalchemy import create_engine
 
 db_name = 'database'
 db_user = 'username'
-db_pass = 'secret'
-db_host = 'db'
+db_pass = 'password'
+db_host = 'postgres'
 db_port = '5432'
 
 # Connect to the database
-db_string = 'postgresql://{}:{}@{}:{}/{}'.format(db_user, db_pass, db_host, db_port, db_name)
+db_string = 'postgresql+psycopg2://root:password@postgres_db:5432'
 db = create_engine(db_string)
 
 
@@ -45,9 +45,10 @@ class Microservice:
                 #     (in_json["capacity"], in_json["owner_id"], in_json["name"])
                 # )
                 # self.db.commit()
-                db.execute("INSERT INTO batteries(capacity, owner_id, name) VALUES(%s, %s, %d)").format(
-                    in_json["capacity"], in_json["owner_id"], in_json["name"]
-                )
+                with db.connect() as conn:
+                    conn.execute("INSERT INTO batteries(capacity, owner_id, name) VALUES(%s, %s, %d)").format(
+                        in_json["capacity"], in_json["owner_id"], in_json["name"]
+                    )
             # if in_json["event_type"] == "DUMP":
             #     res = self.db.execute("SELECT * FROM batteries")
             #     print(res.fetchall())

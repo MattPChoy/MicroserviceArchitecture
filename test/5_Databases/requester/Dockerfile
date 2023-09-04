@@ -2,7 +2,8 @@
 FROM python:3.10
 
 # install pika to access rabbitmq
-RUN pip install pika
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
 
 # Without this setting, Python never prints anything out.
 ENV PYTHONUNBUFFERED=1
@@ -14,4 +15,4 @@ WORKDIR /usr/src/app/requester
 COPY requester.py .
 
 # start command
-CMD [ "python", "requester.py" ]
+CMD [ "python3", "requester.py" ]

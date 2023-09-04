@@ -7,6 +7,8 @@ services:
     ports:
         - '5672:5672'
         - '15672:15672'
+    networks:
+      - bms-network
     volumes:
       - rabbit_mqdata:/usr/share/rabbitmq/data
   bms-db:
@@ -14,6 +16,12 @@ services:
     restart: always
     environment:
       POSTGRES_PASSWORD: password
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    ports:
+      - '5432:5432'
+    networks:
+      - bms-network
     volumes:
       - pgdata:/var/lib/postgresql/data
   requester:
@@ -22,6 +30,8 @@ services:
       - rabbit_mq
     environment:
       AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    networks:
+      - bms-network
     volumes: 
       - ./requester:/usr/src/app/requester
   processor:
@@ -30,9 +40,14 @@ services:
       - rabbit_mq
     environment:
       AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    networks:
+      - bms-network
     volumes: 
       - ./processor:/usr/src/app/processor
 volumes:
     rabbit_mqdata:
       driver: local
     pgdata:
+networks:
+  bms-network:
+    driver: bridge

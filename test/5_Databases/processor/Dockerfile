@@ -2,6 +2,8 @@
 FROM python:3.10
 
 RUN pip install pika
+RUN pip install sqlalchemy
+RUN pip install psycopg2
 
 ENV PYTHONUNBUFFERED=1
 
