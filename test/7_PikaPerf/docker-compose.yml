@@ -1,0 +1,29 @@
+version: '3.2'
+services:
+  rabbit_mq:
+    image: rabbitmq:3.12-management
+    container_name: rabbit_mq_6
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbit_mqdata:/usr/share/rabbitmq/data
+  publisher:
+    build: publisher
+    depends_on:
+      - rabbit_mq
+    environment:
+      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    volumes:
+      - ./publisher:/usr/src/app/publisher
+  consumer:
+    build: consumer
+    depends_on:
+      - rabbit_mq
+    environment:
+      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    volumes:
+      - ./consumer:/usr/src/app/consumer
+volumes:
+  rabbit_mqdata:
+    driver: local
