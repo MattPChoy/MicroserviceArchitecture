@@ -27,6 +27,13 @@ services:
       - ./postgres-data:/var/lib/postgresql/data
       - postgres-data:/var/lib/postgresql/data
       - pgdata:/var/lib/postgresql/data
+    # Makes DB slightly more performant
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "synchronous_commit=off"
   # Create web admin UI
   # https://www.youtube.com/watch?v=nlk0QlPdbcY
   adminer:
@@ -38,6 +45,15 @@ services:
       - '8080:8080'
   processor:
     build: processor
+    depends_on:
+      - rabbit_mq
+      - database
+    environment:
+      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    volumes:
+      - ./processor:/usr/src/app/processor
+  generator:
+    build: generator
     depends_on:
       - rabbit_mq
       - database

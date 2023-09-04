@@ -7,4 +7,6 @@
 - The app provides a basic example of how to pse psycopg2 and postgres with docker.
 
 ## Processor
-- The second generation of [5_Databases/processor] which (hopefully) successfully combines Pika, Docker and Postgres
+- The second generation of [5_Databases/processor] which (hopefully) successfully combines Pika, Docker and Postgres the behaviour is intended to be identical to that of the processor in 5_Databases.
+- Using some optimisations, I was able to get the speed of the microservice to perform 1,333 write operations per second.
+![](./Microservice_Performance.png)
