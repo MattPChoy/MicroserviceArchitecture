@@ -3,18 +3,6 @@ import pika
 import json
 import sqlite3
 
-from sqlalchemy import create_engine
-
-db_name = 'database'
-db_user = 'username'
-db_pass = 'password'
-db_host = 'postgres'
-db_port = '5432'
-
-# Connect to the database
-db_string = 'postgresql+psycopg2://root:password@postgres_db:5432'
-db = create_engine(db_string)
-
 
 class Microservice:
     def __init__(self, AMQP_URL=None):
@@ -40,18 +28,15 @@ class Microservice:
             in_json = json.loads(body.decode('utf-8'))
             print(in_json)
             if in_json["event_type"] == "ADD_BATTERY":
-                # self.db.execute(
-                #     """INSERT INTO batteries(capacity, owner_id, name) VALUES(?, ?, ?)""",
-                #     (in_json["capacity"], in_json["owner_id"], in_json["name"])
-                # )
-                # self.db.commit()
-                with db.connect() as conn:
-                    conn.execute("INSERT INTO batteries(capacity, owner_id, name) VALUES(%s, %s, %d)").format(
-                        in_json["capacity"], in_json["owner_id"], in_json["name"]
-                    )
-            # if in_json["event_type"] == "DUMP":
-            #     res = self.db.execute("SELECT * FROM batteries")
-            #     print(res.fetchall())
+                self.db.execute(
+                    """INSERT INTO batteries(capacity, owner_id, name) VALUES(?, ?, ?)""",
+                    (in_json["capacity"], in_json["owner_id"], in_json["name"])
+                )
+                self.db.commit()
+
+            if in_json["event_type"] == "DUMP":
+                res = self.db.execute("SELECT * FROM batteries")
+                print(res.fetchall())
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
         self.register_receive_message("battery-management-service", handle_bms_input)

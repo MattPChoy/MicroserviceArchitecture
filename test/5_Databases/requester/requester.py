@@ -23,22 +23,20 @@ chan.queue_declare(queue='intermediate-1', durable=True)
 # publish a 100 messages to the queue
 for i in range(10000):
     battery_name = random.choice(["Tesla Model S", "Tesla Model 3", "Tesla Model Y", "Tesla Model X", "Nissan Leaf"])
-    
+
     data = {
-    	"event_type": "ADD_BATTERY",
-    	"capacity": random.randint(80,150),
-    	"owner_id": random.randint(1,100),
-    	"name": battery_name
+        "event_type": "ADD_BATTERY",
+        "capacity": random.randint(80, 150),
+        "owner_id": random.randint(1, 100),
+        "name": battery_name
     }
-    
+
     chan.basic_publish(exchange='', routing_key='battery-management-service',
-                       body=bytes(json.dumps(data), 'utf-8'),      properties=pika.BasicProperties(delivery_mode=2))
+                       body=bytes(json.dumps(data), 'utf-8'), properties=pika.BasicProperties(delivery_mode=2))
     print("Produced the message")
 
-chan.basic_publish(exchange='', routing_key="battery-management-service", body='{"event_type": "DUMP"}', 
-       properties=pika.BasicProperties(delivery_mode=2))
-
-
+chan.basic_publish(exchange='', routing_key="battery-management-service", body='{"event_type": "DUMP"}',
+                   properties=pika.BasicProperties(delivery_mode=2))
 
 # close the channel and connection
 # to avoid program from entering with any lingering

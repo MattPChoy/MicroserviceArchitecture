@@ -1,9 +1,8 @@
 # basic Python image
 FROM python:3.10
 
-RUN pip install pika
-RUN pip install sqlalchemy
-RUN pip install psycopg2
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
 ENV PYTHONUNBUFFERED=1
 
