@@ -9,18 +9,6 @@ services:
         - '15672:15672'
     volumes:
       - rabbit_mqdata:/usr/share/rabbitmq/data
-  postgres:
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - '5432:5432'
-    volumes:
-      - pgdata:/var/lib/postgresql/data
   requester:
     build: requester
     depends_on:
@@ -33,13 +21,10 @@ services:
     build: processor
     depends_on:
       - rabbit_mq
-      - postgres
     environment:
       AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
     volumes: 
       - ./processor:/usr/src/app/processor
 volumes:
     rabbit_mqdata:
-      driver: local
-    pgdata:
       driver: local

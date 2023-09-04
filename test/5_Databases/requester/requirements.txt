@@ -1,4 +1,1 @@
 pika
-postgres
-psycopg2
-sqlalchemy
