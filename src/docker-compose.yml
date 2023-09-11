@@ -52,8 +52,18 @@ services:
     environment:
       AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
     volumes:
-      - ./processor:/usr/src/app/processor
-
+      - ./BatteryManagementService:/usr/src/app/BatteryManagementService
+  disco:
+    build: ./Disco/
+    depends_on:
+      - rabbit_mq
+      - database
+    environment:
+      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    volumes:
+      - ./Disco:/usr/src/app/Disco
+    ports:
+      - '5000:5000'
 # Define the file mount volumes that we want to use.
 volumes:
   rabbit_mqdata:

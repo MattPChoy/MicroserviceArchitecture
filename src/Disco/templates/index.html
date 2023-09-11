@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Discovery</title>
+</head>
+<body>
+    <h1>Service Discovery</h1>
+    <ul id="service-list">
+    </ul>
+
+    <script>
+        function formatTimestamp(timestamp_str) {
+            console.log(timestamp_str)
+            try {
+                if (typeof timestamp_str === 'number') {
+                    timestamp_str = new Date(timestamp_str * 1000).toISOString();
+                }
+                const timestamp = new Date(timestamp_str);
+                const formatted_time = timestamp.toLocaleString(); // Use a localized format
+                return formatted_time;
+            } catch (error) {
+                console.log(e);
+                return "Invalid Timestamp";
+            }
+        }
+
+        function updateServiceList() {
+            fetch('/services')
+                .then(response => response.json())
+                .then(data => {
+                    const serviceList = document.getElementById('service-list');
+                    serviceList.innerHTML = '';
+
+                    for (const serviceName in data) {
+                        const serviceInfo = data[serviceName];
+                        const formattedTime = formatTimestamp(serviceInfo.last_resp);
+
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${serviceName} - Last Response Time: ${formattedTime}`;
+                        serviceList.appendChild(listItem);
+                    }
+                });
+        }
+
+        // Update the service list every 5 seconds
+        setInterval(updateServiceList, 5000);
+        // Initial update when the page loads
+        updateServiceList();
+    </script>
+</body>
+</html>
