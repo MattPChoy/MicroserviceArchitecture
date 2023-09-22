@@ -1,0 +1,82 @@
+version: '3.2'
+services:
+  rabbit_mq:
+    image: rabbitmq:3.12-management
+    container_name: rabbit_mq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbit_mqdata:/usr/share/rabbitmq/data
+    networks:
+      - testnetwork
+  database:
+    image: postgres
+    ports:
+      - '5432:5432'
+    restart: always
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: exampledb
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "my_db", "-U" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    # https://stackoverflow.com/questions/41637505/how-to-persist-data-in-a-dockerized-postgres-database-using-volumes
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+    # Makes DB slightly more performant
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+#      - "-c"
+#      - "synchronous_commit=off"
+    networks:
+      - testnetwork
+  # Create web admin UI
+  # https://www.youtube.com/watch?v=nlk0QlPdbcY
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - database
+    ports:
+      - '8080:8080'
+    networks:
+      - testnetwork
+  batterymanagement:
+    build: BatteryManagementService
+    depends_on:
+      - database
+      - rabbit_mq
+    environment:
+      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+    networks:
+      - testnetwork
+    volumes:
+      - ./BatteryManagementService:/usr/src/app/BatteryManagementService
+  gateway:
+    build: Gateway
+    depends_on:
+      - database
+      - rabbit_mq
+    ports:
+      - '5000:5000'
+    networks:
+      - testnetwork
+    volumes:
+      - ./Gateway:/usr/src/app/Gateway
+volumes:
+  rabbit_mqdata:
+    driver: local
+  pgdata:
+    driver: local
+  postgres-data:
+networks:
+  testnetwork:
+    driver: bridge
