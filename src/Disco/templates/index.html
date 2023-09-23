@@ -31,12 +31,14 @@
                     const serviceList = document.getElementById('service-list');
                     serviceList.innerHTML = '';
 
-                    for (const serviceName in data) {
-                        const serviceInfo = data[serviceName];
+                    for (const key in data) {
+                        const serviceInfo = data[key];
+                        const serviceName = serviceInfo?.service_name;
+                        const ip = serviceInfo?.ip;
                         const formattedTime = formatTimestamp(serviceInfo.last_resp);
 
                         const listItem = document.createElement('li');
-                        listItem.textContent = `${serviceName} - Last Response Time: ${formattedTime}`;
+                        listItem.textContent = `${serviceName} @ ${ip} - Last Response Time: ${formattedTime}`;
                         serviceList.appendChild(listItem);
                     }
                 });

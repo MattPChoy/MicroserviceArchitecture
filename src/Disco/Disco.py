@@ -56,17 +56,18 @@ class Disco(Microservice):
         channel.basic_ack(delivery_tag=method.delivery_tag)
         _msg = body.decode('utf-8')
         try:
-            print(_msg)
             msg = json.loads(_msg)
         except json.decoder.JSONDecodeError as e:
             logging.warning(f"JSONDecodeError: {e} {body}")
             return
 
         # TODO: Eventually fill this with some useful information
-        self.services[msg["service_name"]] = {
-            "last_resp": msg["timestamp"]
+        self.services[msg["ip"]] = {
+            "last_resp": msg["timestamp"],
+            "ip": msg["ip"],
+            "service_name": msg["service_name"],
         }
-        print("Service Check-In " + msg["service_name"])
+        print(f"Service Check-In {msg['service_name']}@{msg['ip']}")
 
     def start(self):
         self.listen("disco", self.callback)
