@@ -43,18 +43,23 @@ app = Flask(__name__)
 # RabbitMQ configuration
 RABBITMQ_URL = 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
 RABBITMQ_QUEUE = 'battery'
-# connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
-# channel = connection.channel()
-# channel.queue_declare(queue=RABBITMQ_QUEUE)
+connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
+channel = connection.channel()
+channel.queue_declare(queue=RABBITMQ_QUEUE)
 
 
 def publish_to_queue(message):
+    global connection, channel
     try:
+        # connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
+        # channel = connection.channel()
+        # channel.queue_declare(queue=RABBITMQ_QUEUE)
+        channel.basic_publish(exchange='', routing_key=RABBITMQ_QUEUE, body=message)
+        return True
+    except ConnectionResetError as e:
         connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
         channel = connection.channel()
         channel.queue_declare(queue=RABBITMQ_QUEUE)
-        channel.basic_publish(exchange='', routing_key=RABBITMQ_QUEUE, body=message)
-        return True
     except Exception as e:
         print(f"Error publishing to RabbitMQ: {e}")
         return False

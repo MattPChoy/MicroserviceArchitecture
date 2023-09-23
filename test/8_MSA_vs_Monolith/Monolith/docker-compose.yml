@@ -1,0 +1,58 @@
+version: '3.2'
+services:
+  database:
+    image: postgres
+    ports:
+      - '5432:5432'
+    restart: always
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: exampledb
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "my_db", "-U" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    # https://stackoverflow.com/questions/41637505/how-to-persist-data-in-a-dockerized-postgres-database-using-volumes
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+    # Makes DB slightly more performant
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+#      - "-c"
+#      - "synchronous_commit=off"
+    networks:
+      - testnetwork
+  # Create web admin UI
+  # https://www.youtube.com/watch?v=nlk0QlPdbcY
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - database
+    ports:
+      - '8080:8080'
+    networks:
+      - testnetwork
+  monolith:
+    build: monolith
+    depends_on:
+      - database
+    ports:
+      - '5000:5000'
+    networks:
+      - testnetwork
+    volumes:
+      - ./monolith:/usr/src/app/monolith
+volumes:
+  pgdata:
+    driver: local
+  postgres-data:
+networks:
+  testnetwork:
+    driver: bridge

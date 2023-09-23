@@ -15,6 +15,8 @@ class Microservice:
         self.connection = pika.BlockingConnection(
             pika.URLParameters(self.amqp_url)
         )
+        # self.connection_manager = ConnectionManager(amqp_url)
+        # self.connection = self.connection_manager.connect()
         self.channel = self.connection.channel()
 
         self._db = None
@@ -85,7 +87,6 @@ class BatteryManagementService(Microservice):
 
     def bms_callback(self, channel, method, properties, body):
         print("Receive message")
-        channel.basic_ack(delivery_tag=method.delivery_tag)
         _msg = body.decode('utf-8')
         try:
             msg = json.loads(_msg)
@@ -108,8 +109,10 @@ class BatteryManagementService(Microservice):
                 cursor.execute("INSERT INTO batteries (capacity, charge, name) VALUES (%s,%s,%s) RETURNING id",
                                (capacity, charge, name))
                 self.get_db().commit()
+                time.sleep(5 / 1000)
                 # self.logger.info(f"[AddBattery] Adding battery id={cursor.fetchall()[0][0]}")
                 self.logger.info(f"[AddBattery] Adding battery")
+                channel.basic_ack(delivery_tag=method.delivery_tag)
             elif req_type == "GET_BATTERY":
                 if (battery_id := msg.get("battery_id", None)) is None:
                     self.logger.warning(f"[GetBattery] BatteryID provided is None {_msg}")
@@ -130,6 +133,7 @@ class BatteryManagementService(Microservice):
                 }
                 self.write(dest, bytes(str(data), 'utf-8'))
                 self.logger.info(f"[GetBattery] Retrieved battery ID {battery_id} data={res}")
+                channel.basic_ack(delivery_tag=method.delivery_tag)
         else:
             self.logger.warning("Unsupported event type")
 
@@ -144,6 +148,7 @@ class BatteryManagementService(Microservice):
         )
 
         cursor = self.get_db().cursor()
+        cursor.execute('DROP TABLE IF EXISTS BATTERIES')
 
         cursor.execute('CREATE TABLE IF NOT EXISTS "public".BATTERIES ( \
                         "id" SERIAL PRIMARY KEY, \
