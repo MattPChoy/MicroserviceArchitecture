@@ -9,16 +9,16 @@ RUN mkdir /app
 WORKDIR /app
 
 # Copy the requirements file into the container
-COPY Gateway/requirements.txt /app/
+COPY UserManagement/requirements.txt /app/
 
 # Install any needed packages specified in requirements.txt
 RUN pip install -r requirements.txt
 
 # Copy the rest of the application code into the container
-COPY Gateway/ /app/
+COPY UserManagement/ /app/
 
-# Expose port 8000 for FastAPI
-EXPOSE 8000
+# Expose port 8001 for FastAPI
+EXPOSE 8001
 
 # Command to run the application
-CMD ["uvicorn", "api_gateway:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["uvicorn", "user_management:app", "--host", "0.0.0.0", "--port", "8001"]

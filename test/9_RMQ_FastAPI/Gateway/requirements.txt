@@ -1,5 +1,3 @@
-psycopg2-binary
-pika
-fastapi[all]
-uvicorn[standard]
-pydantic
+fastapi
+uvicorn
+aio-pika
