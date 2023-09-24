@@ -1,54 +1,31 @@
 version: '3'
-
 services:
-  rabbitmq:
-    image: "rabbitmq:3.12-management"
+  rabbit_mq:
+    image: rabbitmq:3.12-management
+    container_name: rabbit_mq
     ports:
-      - "5672:5672"  # RabbitMQ main port
-      - "15672:15672"  # RabbitMQ management UI
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbit_mqdata:/usr/share/rabbitmq/data
 
-  postgres:
-    image: "postgres:13"
+  gateway:
+    build: gateway
     ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: exampledb
-      POSTGRES_USER: docker
-      POSTGRES_PASSWORD: docker
-
-  adminer:
-    image: "adminer:latest"
-    ports:
-      - "8080:8080"
-
-  api_gateway:
-    build:
-      context: .
-      dockerfile: Gateway/Dockerfile
-    ports:
-      - "5000:5000"  # Deploy on port 5000
+      - "8000:8000"
     depends_on:
-      - rabbitmq
-      - postgres
-    links:
-      - rabbitmq:rabbit_mq
-    environment:
-      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+      - rabbit_mq
 
-  user_management:
+  batterymanagement:
     build:
-      context: .
-      dockerfile: UserManagement/Dockerfile
-    ports:
-      - "8001:8001"
+      context: batterymanagement
     depends_on:
-      - postgres
-      - rabbitmq
-    links:
-      - postgres:database
-      - rabbitmq:rabbit_mq
-    environment:
-      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+      - rabbit_mq
+
+
+volumes:
+  rabbit_mqdata:
+    driver: local
+  pgdata:
+    driver: local
+  postgres-data:
