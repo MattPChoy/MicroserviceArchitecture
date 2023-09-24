@@ -86,7 +86,6 @@ class BatteryManagementService(Microservice):
         super().__init__(amqp_url='amqp://rabbit_mq?connection_attempts=10&retry_delay=10')
 
     def bms_callback(self, channel, method, properties, body):
-        print("Receive message")
         _msg = body.decode('utf-8')
         try:
             msg = json.loads(_msg)
