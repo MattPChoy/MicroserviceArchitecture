@@ -1,7 +1,8 @@
-FROM python:3.10
+FROM python:3.8
 
 WORKDIR /app
 COPY . /app
+ENV PYTHONUNBUFFERED=1
 
 RUN pip install -r requirements.txt
 
