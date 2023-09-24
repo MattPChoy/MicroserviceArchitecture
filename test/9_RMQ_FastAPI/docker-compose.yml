@@ -1,0 +1,40 @@
+version: '3.2'
+services:
+  rabbit_mq:
+    image: rabbitmq:3.12-management
+    container_name: rabbit_mq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbit_mqdata:/usr/share/rabbitmq/data
+    networks:
+      - primaryNetwork
+#  batterymanagement:
+#    build: BatteryManagement
+#    depends_on:
+#      - rabbit_mq
+#    environment:
+#      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
+#    volumes:
+#      - ./batterymanagement:/usr/src/app/Microservice
+#    networks:
+#      - primaryNetwork
+  gateway:
+    build: Gateway
+    depends_on:
+      - rabbit_mq
+    ports:
+      - '5000:5000'
+    volumes:
+      - ./gateway:/usr/src/app/gateway
+    networks:
+      - primaryNetwork
+volumes:
+  batterymanagement:
+    driver: local
+  rabbit_mqdata:
+    driver: local
+networks:
+  primaryNetwork:
+    driver: bridge
