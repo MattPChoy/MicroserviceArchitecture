@@ -5,6 +5,21 @@ import pika
 import psycopg2
 import time
 import threading
+import socket
+
+
+def get_local_ip():
+    try:
+        # Create a socket to get the local IP address
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(0.1)
+        s.connect(("8.8.8.8", 80))  # Connect to a known external server (e.g., Google's DNS)
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception as e:
+        print(f"Error getting local IP address: {str(e)}")
+        return None
 
 
 class Microservice:
@@ -25,7 +40,8 @@ class Microservice:
         self.write("disco", json.dumps({
             # Retrieve name of class - this gets the implementing class' name
             "service_name": type(self).__name__,
-            "timestamp": time.time()
+            "timestamp": time.time(),
+            "ip": get_local_ip()
         }))
 
         self.start_health_check_thread()
@@ -37,8 +53,14 @@ class Microservice:
         return self._db
 
     def listen(self, queue_name, callback, durable=True):
-        self.channel.queue_declare(queue=queue_name, durable=durable)
-        self.channel.basic_consume(queue=queue_name, on_message_callback=callback)
+        try:
+            self.channel.queue_declare(queue=queue_name, durable=durable)
+            self.channel.basic_consume(queue=queue_name, on_message_callback=callback)
+        except ConnectionResetError:
+            self.connection = pika.BlockingConnection(
+                pika.URLParameters(self.amqp_url)
+            )
+            self.channel = self.connection.channel()
 
     def add_write_queue(self, queue_name):
         self.channel.queue_declare(queue=queue_name, durable=True)
@@ -59,18 +81,19 @@ class Microservice:
         )
         channel = conn.channel()
         while True:
-            # Send a health check message to "disco
+            # Send a health check message to "disco"
             # Here, create a new channel as channels aren't threadsafe - each thread should have it's own channel.
             channel.basic_publish(
                 exchange=self.DEFAULT_EXCHANGE,
                 routing_key="disco",
                 body=json.dumps({
                     "service_name": type(self).__name__,
-                    "timestamp": time.time()
+                    "timestamp": time.time(),
+                    "ip": get_local_ip()
                 }).encode('utf-8'),
                 properties=pika.BasicProperties(delivery_mode=2)
             )
-            time.sleep(10)  # Sleep for 30 seconds
+            time.sleep(15)
 
     def start_health_check_thread(self):
         # Create and start a thread for sending health checks
