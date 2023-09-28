@@ -10,19 +10,18 @@ services:
       - rabbit_mqdata:/usr/share/rabbitmq/data
 
   gateway:
-    build: gateway
+    build:
+      context: ./gateway
     ports:
       - "8000:8000"
     depends_on:
       - rabbit_mq
 
-  batterymanagement:
+  microservice:
     build:
-      context: batterymanagement
+      context: ./microservice
     depends_on:
       - rabbit_mq
-
-
 volumes:
   rabbit_mqdata:
     driver: local

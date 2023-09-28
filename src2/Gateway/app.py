@@ -153,6 +153,7 @@ async def post_batteries(battery: Battery):
         channel = connection.channel()
         channel.basic_publish(exchange='', routing_key='battery-in', body=json.dumps(body).encode('utf-8'))
     print("Message sent to battery-in queue")
+
     while True:
         method_frame, header_frame, body = channel.basic_get(queue='battery-out', auto_ack=False)
         if body is not None:
