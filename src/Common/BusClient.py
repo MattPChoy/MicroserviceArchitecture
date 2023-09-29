@@ -7,6 +7,10 @@ from pika.exceptions import StreamLostError
 
 
 def get_local_ip():
+    """
+    Get the local IP address of the current device.
+    :return String: The local IP address of the current device.
+    """
     try:
         # Create a socket to get the local IP address
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -23,21 +27,27 @@ def get_local_ip():
 class BusClient:
     def __init__(self, hostname="rabbit_mq"):
         self.hostname = hostname
-        self.connection = self.get_connection()
+        self.connection = self._get_connection()
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(asctime)s: %(message)s")
         self.channel = self.connection.channel()
         # Hostname is used in the AMQP_URL and is the name of the docker container.
 
-    def get_connection(self):
+    def _get_connection(self):
         """
-        Retrieve a RMQ Connection
+        Retrieve a message bus Connection object.
+        :return BlockingConnection: A RMQ Connection object.
         """
         # AMQP_URL = os.environ.get("AMQP_URL", "amqp://rabbit_mq?connection_attempts=10&retry_delay=10")
         AMQP_URL = f"amqp://{self.hostname}?connection_attempts=10&retry_delay=10"
         return pika.BlockingConnection(pika.URLParameters(AMQP_URL))
 
-    def publish(self, queue, msg: bytes):
+    def publish(self, queue, msg: [bytes, dict]):
+        """
+        Publish a bytestring message to the message queue "queue".
+        """
+
+        assert type(msg) in [bytes, dict], "Message is of incorrect type. It should be a bytestring or a dict."
 
         if type(msg) == dict:
             msg = json.dumps(msg).encode('utf-8')
@@ -48,13 +58,17 @@ class BusClient:
             self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
         except StreamLostError as e:
             self.logger.warning(f"StreamLostError: {e}")
-            self.connection = self.get_connection()
+            self.connection = self._get_connection()
             self.channel = self.connection.channel()
             self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
         else:
             self.logger.info(f"Message published to {queue}")
 
     def send_discovery(self):
+        """
+        Send a message to the discovery queue, to tell the Discovery service (and the other services)
+        that the current service is up and running.
+        """
         data = {
             "ServiceName": type(self).__name__,
             "time": time.time(),
