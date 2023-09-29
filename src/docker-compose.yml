@@ -1,16 +1,23 @@
-# docker-compose version
 version: "3.2"
 services:
-  # Define the message bus service.
+  taskqueue:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    command: redis-server --port 6379 --loglevel warning
+    volumes:
+      - redis_cache:/data
+    networks:
+      - taskqueue
   rabbit_mq:
     image: rabbitmq:3.12-management
-    container_name: rabbit_mq
     ports:
-      - '5672:5672'
-      - '15672:15672'
+      - "5672:5672"
+      - "15672:15672"
     volumes:
-      - rabbit_mqdata:/usr/share/rabbitmq/data
-  # Define the database (atm used for the BatteryManagementService)
+      - rabbitmq_data:/usr/share/rabbitmq/data
+    networks:
+      - rabbitmq
   database:
     image: postgres
     ports:
@@ -37,6 +44,18 @@ services:
       - "wal_level=logical"
       - "-c"
       - "synchronous_commit=off"
+  gateway:
+    ports:
+      - '5000:5000'
+    depends_on:
+      - taskqueue
+      - rabbit_mq
+    build:
+      context: .
+      dockerfile: ./Gateway/Dockerfile
+    networks:
+      - rabbitmq
+      - taskqueue
   adminer:
     image: adminer
     restart: always
@@ -44,30 +63,17 @@ services:
       - database
     ports:
       - '8080:8080'
-  battery-management-service:
-    build: ./BatteryManagementService/
-    depends_on:
-      - rabbit_mq
-      - database
-    environment:
-      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
-    volumes:
-      - ./BatteryManagementService:/usr/src/app/BatteryManagementService
-  disco:
-    build: ./Disco/
-    depends_on:
-      - rabbit_mq
-      - database
-    environment:
-      AMQP_URL: 'amqp://rabbit_mq?connection_attempts=10&retry_delay=10'
-    volumes:
-      - ./Disco:/usr/src/app/Disco
-    ports:
-      - '5000:5000'
-# Define the file mount volumes that we want to use.
 volumes:
-  rabbit_mqdata:
+  redis_cache:
+    driver: local
+  rabbitmq_data:
     driver: local
   pgdata:
     driver: local
   postgres-data:
+    driver: local
+networks:
+  rabbitmq:
+    driver: bridge
+  taskqueue:
+    driver: bridge
