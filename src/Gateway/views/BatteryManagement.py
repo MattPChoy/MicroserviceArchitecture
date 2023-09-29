@@ -5,6 +5,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from Common.BusClient import BusClient
 from Common.TaskQueue import TaskQueue, TaskStatus
+from Common.BatteryRequestType import BatteryRequestType
 from json import JSONDecodeError
 
 import sys
@@ -36,15 +37,17 @@ async def add_battery(battery: Battery):
     task_queue.add(correlation_id)
 
     body = {
-        "type": "ADD_BATTERY",
+        "type": BatteryRequestType.ADD_BATTERY.value,
         "correlation_id": correlation_id,
+        "owner": battery.owner,  # Battery owner UID
         "name": battery.name,
         "capacity": battery.capacity,
         "charge": battery.charge
     }
-
+    logger.info(body)
     rmq_client.publish("battery", body)
     start_time = time.time()
+    logger.info("Start processing request at time %s", start_time)
 
     while True:
         _task = task_queue.get(correlation_id)
@@ -55,8 +58,6 @@ async def add_battery(battery: Battery):
             logger.warning(f"Failed to decode task from redis {_task}: {error}")
             continue
 
-        logger.info(task)
-
         if task is None:
             continue
 
@@ -65,15 +66,16 @@ async def add_battery(battery: Battery):
 
         task_status = TaskStatus(task_status)
 
-        if time.time() - start_time > 2:
+        if time.time() - start_time > 30:
             raise HTTPException(status_code=500,
                                 detail=f"Worker node took took long to respond (correlation_id={correlation_id})")
-        if task_status == TaskStatus.NOT_STARTED:
+        if task_status in [TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS]:
             # Keep blocking until the task has been processed by the worker
             continue
         elif task_status == TaskStatus.SUCCEEDED:
-            return task.result
+            return task
         elif task_status == TaskStatus.FAILED:
             raise HTTPException(status_code=400, detail="Task failed to complete")
         else:
+            logger.warning("Timeout at time %s", time.time())
             raise HTTPException(status_code=400, detail=f"Request state {task_status.name} not implemented yet")

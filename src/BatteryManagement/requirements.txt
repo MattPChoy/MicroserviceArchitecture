@@ -1,5 +1,5 @@
 uvicorn
-fastapi
 pika
 redis
+pydantic
 psycopg2-binary

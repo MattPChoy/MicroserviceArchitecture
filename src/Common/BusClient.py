@@ -42,17 +42,13 @@ class BusClient:
         AMQP_URL = f"amqp://{self.hostname}?connection_attempts=10&retry_delay=10"
         return pika.BlockingConnection(pika.URLParameters(AMQP_URL))
 
-    def publish(self, queue, msg: [bytes, dict]):
+    def publish(self, queue, msg: dict):
         """
         Publish a bytestring message to the message queue "queue".
         """
 
-        assert type(msg) in [bytes, dict], "Message is of incorrect type. It should be a bytestring or a dict."
-
-        if type(msg) == dict:
-            msg = json.dumps(msg).encode('utf-8')
-        else:
-            raise TypeError("msg parameter should be a bytestring")
+        assert type(msg) == dict, f"Message is of incorrect type. It should be a dict but is of type {type(msg)}"
+        msg = json.dumps(msg).encode('utf-8')
 
         try:
             self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
@@ -74,4 +70,7 @@ class BusClient:
             "time": time.time(),
             "ip": get_local_ip(),
         }
-        self.publish("discovery", json.dumps(data).encode('utf-8'))
+        self.publish("discovery", data)
+
+    def start(self):
+        self.channel.start_consuming()

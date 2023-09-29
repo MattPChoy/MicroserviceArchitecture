@@ -25,9 +25,13 @@ class TaskQueue:
     def get(self, correlation_id: str):
         return self.redis_client.get(correlation_id)
 
-    def update(self, correlation_id: str, status: [TaskStatus, int], payload=""):
+    def update(self, correlation_id: str, status: [TaskStatus, int], payload: dict = None):
         assert type(status) in [TaskStatus, int]
-        status = status.value if status == type(TaskStatus) else status
+        status = status if type(status) == int else status.value
+
+        assert type(status) == int, f"status should be casted of type integer but is instead of type {type(status)}"
+        assert payload is None or type(payload) == dict, f"payload should be of type dict but is instead of type {type(payload)}"
+        payload = payload or dict() # Set payload to an empty dictionary if it is None.
 
         return self.redis_client.set(correlation_id, json.dumps({"status": status, "payload": payload}))
 

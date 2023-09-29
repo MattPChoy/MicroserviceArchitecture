@@ -44,6 +44,8 @@ services:
       - "wal_level=logical"
       - "-c"
       - "synchronous_commit=off"
+    networks:
+      - database
   gateway:
     ports:
       - '5000:5000'
@@ -56,6 +58,17 @@ services:
     networks:
       - rabbitmq
       - taskqueue
+  batterymanagement:
+    depends_on:
+      - taskqueue
+      - rabbit_mq
+    build:
+     context: .
+     dockerfile: ./BatteryManagement/Dockerfile
+    networks:
+      - rabbitmq
+      - taskqueue
+      - database
   adminer:
     image: adminer
     restart: always
@@ -63,6 +76,8 @@ services:
       - database
     ports:
       - '8080:8080'
+    networks:
+      - database
 volumes:
   redis_cache:
     driver: local
@@ -76,4 +91,6 @@ networks:
   rabbitmq:
     driver: bridge
   taskqueue:
+    driver: bridge
+  database:
     driver: bridge
