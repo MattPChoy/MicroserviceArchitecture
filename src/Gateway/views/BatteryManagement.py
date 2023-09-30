@@ -19,7 +19,6 @@ bus_client = BusClient()
 task_queue = TaskQueue()
 
 logger = logging.getLogger(__name__)
-# TODO: Change back to logging.INFO level.
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(asctime)s: %(message)s")
 
 

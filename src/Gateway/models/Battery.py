@@ -16,10 +16,10 @@ class Battery(BaseModel):
 class BatteryTable:
     def __init__(self, db=None):
         self.db = db or psycopg2.connect(
-            database='exampledb',
+            database='batteries_db',
             user='docker',
             password='docker',
-            host='database',
+            host='batteries_db',
         )
         self.cursor = self.db.cursor()
         self.cursor.execute('CREATE TABLE IF NOT EXISTS "public".BATTERIES ( \

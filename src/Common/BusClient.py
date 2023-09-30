@@ -52,17 +52,25 @@ class BusClient:
         assert type(msg) == dict, f"Message is of incorrect type. It should be a dict but is of type {type(msg)}"
         assert "correlation_id" in msg, f"Message must contain a correlation id"
 
+        def _publish(msg, queue):
+            self.channel.queue_declare(queue=queue)
+
+            try:
+                self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
+            except StreamLostError as e:
+                self.logger.warning(f"StreamLostError: {e}")
+                self.connection = self._get_connection()
+                self.channel = self.connection.channel()
+                self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
+
         msg = json.dumps(msg).encode('utf-8')
-
         try:
-            self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
-        except StreamLostError as e:
-            self.logger.warning(f"StreamLostError: {e}")
+            _publish(msg, queue)
+        except pika.exceptions.StreamLostError:
             self.connection = self._get_connection()
-            self.channel = self.connection.channel()
-            self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
+            _publish(msg, queue)
 
-    def send_discovery(self, service_name:str):
+    def send_discovery(self, service_name: str):
         """
         Send a message to the discovery queue, to tell the Discovery service (and the other services)
         that the current service is up and running.

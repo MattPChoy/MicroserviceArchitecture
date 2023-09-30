@@ -94,7 +94,7 @@ class BatteryManagement(Microservice):
         try:
             msg = json.loads(_msg)
         except JSONDecodeError as error:
-            self.logger.error(f"{error}")
+            self.logger.error(f"Request type unknown {error}")
             channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
             return
 
