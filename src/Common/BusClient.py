@@ -42,7 +42,7 @@ class BusClient:
         AMQP_URL = f"amqp://{self.hostname}?connection_attempts=10&retry_delay=10"
         return pika.BlockingConnection(pika.URLParameters(AMQP_URL))
 
-    def publish(self, queue, msg: dict):
+    def publish(self, queue: str, msg: dict):
         """
         Publish a bytestring message to the message queue "queue".
         """
@@ -57,8 +57,6 @@ class BusClient:
             self.connection = self._get_connection()
             self.channel = self.connection.channel()
             self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
-        else:
-            self.logger.info(f"Message published to {queue}")
 
     def send_discovery(self):
         """

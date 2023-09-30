@@ -1,4 +1,5 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
+ENV PYTHONUNBUFFERED=1
 
 COPY Common Common
 COPY Gateway/requirements.txt .
