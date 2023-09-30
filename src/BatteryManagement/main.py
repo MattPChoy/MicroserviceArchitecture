@@ -50,6 +50,7 @@ class BatteryManagement(Microservice):
         if (battery := self.battery_table.get(msg['battery_id'])) is None:
             self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
                                    payload={"battery_data": [], "desc": "No battery with this ID"})
+            return
         elif battery is False:
             # Some sort of SQL error
             self.logger.warn(f"Task failed as a result of SQL error (battery={battery})")
