@@ -30,7 +30,8 @@ async def get_response(correlation_id: str):
     start_time = time.time()
     while True:
         if (_task := task_queue.get(correlation_id)) is None:
-            logger.warning(f"Task details retrieved were Nonetype (correlation_id={correlation_id}).")
+            # The loop may enter this branch several times before initial processing is finished and the
+            # task is added to the redis queue
             continue
 
         try:

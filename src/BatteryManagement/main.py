@@ -57,8 +57,9 @@ class BatteryManagement(Microservice):
             self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.FAILED)
             return
 
+        assert battery is not None, f"Battery to be returned is none (correlation_id={correlation_id}"
         self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
-                               payload={"battery_data": battery})
+                               payload={"battery_data": dict(zip(self.battery_table.column_names, battery))})
 
     def callback(self, channel, method, properties, body):
         _msg = body.decode('utf-8')

@@ -27,6 +27,7 @@ class BatteryTable:
                                 "name" text NOT NULL \
                             )')
         self.db.commit()
+        self.column_names = ["id", "owner", "capacity", "charge", "name"]
 
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(asctime)s: %(message)s")
