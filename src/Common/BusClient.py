@@ -3,6 +3,8 @@ import json
 import pika
 import logging
 import socket
+import uuid
+from .ServiceStatusType import ServiceStatusType
 from pika.exceptions import StreamLostError
 
 
@@ -48,6 +50,8 @@ class BusClient:
         """
 
         assert type(msg) == dict, f"Message is of incorrect type. It should be a dict but is of type {type(msg)}"
+        assert "correlation_id" in msg, f"Message must contain a correlation id"
+
         msg = json.dumps(msg).encode('utf-8')
 
         try:
@@ -58,17 +62,21 @@ class BusClient:
             self.channel = self.connection.channel()
             self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
 
-    def send_discovery(self):
+    def send_discovery(self, service_name:str):
         """
         Send a message to the discovery queue, to tell the Discovery service (and the other services)
         that the current service is up and running.
         """
+
+        assert service_name is not None, "Service name is undefined"
         data = {
-            "ServiceName": type(self).__name__,
+            "name": service_name,
             "time": time.time(),
             "ip": get_local_ip(),
+            "correlation_id": str(uuid.uuid4()),
+            "type": ServiceStatusType.HEALTH_CHECK.value
         }
-        self.publish("discovery", data)
+        self.publish("disco", data)
 
     def start(self):
         self.channel.start_consuming()

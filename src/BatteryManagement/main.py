@@ -12,7 +12,7 @@ class BatteryManagement(Microservice):
         super().__init__()
         self.battery_table = BatteryTable()
         self.task_queue = TaskQueue()
-        self.bus_client.send_discovery()
+        self.bus_client.send_discovery(type(self).__name__)
 
     def add_battery(self, msg: dict):
         assert "owner" in msg, "Battery owner not defined"
@@ -116,7 +116,7 @@ class BatteryManagement(Microservice):
 
         channel.basic_ack(delivery_tag=method.delivery_tag)
 
-    def run(self):
+    def start(self):
         self.bus_client.channel.queue_declare(queue="battery")
         self.bus_client.channel.basic_consume(queue="battery", on_message_callback=self.callback)
         self.bus_client.start()
@@ -124,4 +124,4 @@ class BatteryManagement(Microservice):
 
 if __name__ == "__main__":
     srv = BatteryManagement()
-    srv.run()
+    srv.start()

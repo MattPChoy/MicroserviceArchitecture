@@ -12,3 +12,5 @@ specification which is contained in [Gateway/Views/BatteryManagement.py](../Gate
 - RabbitMQ message bus (abstracted in [BusClient.py](../Common/BusClient.py))
 - PostgreSQL database for battery persistence (abstracted in the BatteryTable class
   in [Battery.py](..Gateway/models/Battery.py)
+- Redis for task queue (abstracted in [TaskQueue.py](../Common/TaskQueue.py)) for allowing multiple concurrent front-end
+  instances to serve concurrent requests.

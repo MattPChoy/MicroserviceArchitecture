@@ -63,12 +63,22 @@ services:
       - taskqueue
       - rabbit_mq
     build:
-     context: .
-     dockerfile: ./BatteryManagement/Dockerfile
+      context: .
+      dockerfile: ./BatteryManagement/Dockerfile
     networks:
       - rabbitmq
       - taskqueue
       - database
+  disco:
+    depends_on:
+      - rabbit_mq
+      - taskqueue
+    build:
+      context: .
+      dockerfile: ./Disco/Dockerfile
+    networks:
+      - rabbitmq
+      - taskqueue
   adminer:
     image: adminer
     restart: always
