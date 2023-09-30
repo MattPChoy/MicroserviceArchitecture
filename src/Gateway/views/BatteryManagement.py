@@ -18,7 +18,7 @@ router = APIRouter(
     prefix="/api/v1/battery",
 )
 
-rmq_client = BusClient()
+bus_client = BusClient()
 task_queue = TaskQueue()
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ async def get_response(correlation_id: str):
 
         task_status = TaskStatus(task_status)
 
-        if time.time() - start_time > 30:
+        if time.time() - start_time > 5:
             raise HTTPException(status_code=500,
                                 detail=f"Worker node took took long to respond (correlation_id={correlation_id})")
         if task_status in [TaskStatus.NOT_STARTED, TaskStatus.IN_PROGRESS]:
@@ -68,15 +68,8 @@ async def get_response(correlation_id: str):
 
 
 @router.post("/")
-async def handle_root():
-    return "Hello to the BatteryManagement World"
-
-
-@router.post("/add")
 async def add_battery(battery: Battery):
-    correlation_id = str(uuid.uuid4())
-
-    task_queue.add(correlation_id)
+    correlation_id = task_queue.create_task()
 
     body = {
         "type": BatteryRequestType.ADD_BATTERY.value,
@@ -86,21 +79,54 @@ async def add_battery(battery: Battery):
         "capacity": battery.capacity,
         "charge": battery.charge
     }
-    rmq_client.publish("battery", body)
+    bus_client.publish("battery", body)
 
     return await get_response(correlation_id=correlation_id)
 
 
-@router.get("/get")
+@router.get("/")
 async def get_battery(battery_id: str):
-    task_queue.add(battery_id)
+    correlation_id = task_queue.create_task()
 
-    correlation_id = str(uuid.uuid4())
     body = {
         "type": BatteryRequestType.GET_BATTERY.value,
         "correlation_id": correlation_id,
         "battery_id": battery_id
     }
-    rmq_client.publish("battery", body)
+    bus_client.publish("battery", body)
+    return await get_response(correlation_id=correlation_id)
 
+
+@router.put("/")
+async def update_battery(battery: Battery):
+    correlation_id = task_queue.create_task()
+
+    if battery.id is None:
+        raise HTTPException(400, "PUT request must contain battery ID")
+
+    # TODO: Do some validation here?
+
+    body = {
+        "type": BatteryRequestType.UPDATE_BATTERY.value,
+        "correlation_id": correlation_id,
+        "id": battery.id,
+        "owner": battery.owner,
+        "name": battery.name,
+        "capacity": battery.capacity,
+        "charge": battery.charge
+    }
+
+    bus_client.publish("battery", body)
+    return await get_response(correlation_id=correlation_id)
+
+
+@router.delete("/")
+async def delete_battery(battery_id: str):
+    correlation_id = task_queue.create_task()
+    body = {
+        "type": BatteryRequestType.DELETE_BATTERY.value,
+        "correlation_id": correlation_id,
+        "id": battery_id,
+    }
+    bus_client.publish("battery", body)
     return await get_response(correlation_id=correlation_id)

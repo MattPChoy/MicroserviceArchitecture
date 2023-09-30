@@ -39,8 +39,6 @@ class BatteryManagement(Microservice):
                                payload=response)
 
     def get_battery_from_guid(self, msg: dict):
-        self.logger.info(f"Message received across message bus for GET request is {msg}")
-
         assert "correlation_id" in msg, "Correlation_id not defined"
         correlation_id = msg['correlation_id']
         self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
@@ -51,8 +49,7 @@ class BatteryManagement(Microservice):
             self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
                                    payload={"battery_data": [], "desc": "No battery with this ID"})
             return
-        elif battery is False:
-            # Some sort of SQL error
+        elif battery is False:  # Some sort of SQL error
             self.logger.warn(f"Task failed as a result of SQL error (battery={battery})")
             self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.FAILED)
             return
@@ -60,6 +57,37 @@ class BatteryManagement(Microservice):
         assert battery is not None, f"Battery to be returned is none (correlation_id={correlation_id}"
         self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
                                payload={"battery_data": dict(zip(self.battery_table.column_names, battery))})
+
+    def update_battery_from_guid(self, msg):
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
+        assert 'id' in msg, f"Battery ID not passed in request payload. Keys were {msg.keys()}"
+
+        # Temporarily add this to ensure that we prevent the propagation of null values through the system.
+        assert 'owner' in msg, f"Battery owner not passed in request payload. Keys were {msg.keys()}"
+        assert 'name' in msg, f"Battery name not passed in request payload. Keys were {msg.keys()}"
+        assert 'capacity' in msg, f"Battery capacity not passed in request payload. Keys were {msg.keys()}"
+        assert 'charge' in msg, f"Battery charge not passed in request payload. Keys were {msg.keys()}"
+
+        # TODO: Make each of these optional?
+        # TODO: Handle sql errors from the battery_table.update function
+        self.battery_table.update(owner=msg['owner'], id=msg['id'], capacity=msg['capacity'], charge=msg['charge'],
+                                  name=msg['name'])
+        self.logger.info("Battery update succeeded.")
+        self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED, payload={})
+
+    def delete_battery_from_guid(self, msg):
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
+        assert 'id' in msg, f"Battery ID not passed in request payload. Keys were {msg.keys()}"
+
+        self.battery_table.delete(msg['id'])
+        self.logger.info(f"Battery delete succeeded (battery_id={msg['id']}, correlation_id={correlation_id})")
+        self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED, payload={})
 
     def callback(self, channel, method, properties, body):
         _msg = body.decode('utf-8')
@@ -79,9 +107,14 @@ class BatteryManagement(Microservice):
 
         if request_type == BatteryRequestType.ADD_BATTERY:
             self.add_battery(msg)
-            channel.basic_ack(delivery_tag=method.delivery_tag)
         elif request_type == BatteryRequestType.GET_BATTERY:
             self.get_battery_from_guid(msg)
+        elif request_type == BatteryRequestType.UPDATE_BATTERY:
+            self.update_battery_from_guid(msg)
+        elif request_type == BatteryRequestType.DELETE_BATTERY:
+            self.delete_battery_from_guid(msg)
+
+        channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def run(self):
         self.bus_client.channel.queue_declare(queue="battery")

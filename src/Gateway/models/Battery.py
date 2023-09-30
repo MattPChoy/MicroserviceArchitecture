@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 import psycopg2
 import logging
@@ -8,6 +10,7 @@ class Battery(BaseModel):
     capacity: int
     charge: int
     owner: int
+    id: Optional[str] = None
 
 
 class BatteryTable:
@@ -57,9 +60,10 @@ class BatteryTable:
         self.cursor.execute('SELECT * FROM "public".BATTERIES WHERE uid=%s', (uid,))
         return self.cursor.fetchall()
 
-    def update(self, owner: str, battery_id: int, name: str, capacity: int, charge: int):
-        self.cursor.execute('UPDATE "public".BATTERIES SET owner=%s name=%s, capacity=%s, charge=%s WHERE id=%s',
-                            (owner, name, capacity, charge, battery_id))
+    def update(self, owner: str, id: int, name: str, capacity: int, charge: int):
+        self.cursor.execute(
+            'UPDATE "public".BATTERIES SET owner = %s, name = %s, capacity = %s, charge = %s WHERE id = %s',
+            (owner, name, capacity, charge, id))
         self.db.commit()
 
     def delete(self, battery_id: int):
