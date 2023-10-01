@@ -53,14 +53,15 @@ class BusClient:
         assert "correlation_id" in msg, f"Message must contain a correlation id"
 
         def _publish(msg, queue):
-            self.channel.queue_declare(queue=queue)
 
             try:
+                self.channel.queue_declare(queue=queue)
                 self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
             except StreamLostError as e:
                 self.logger.warning(f"StreamLostError: {e}")
                 self.connection = self._get_connection()
                 self.channel = self.connection.channel()
+                self.channel.queue_declare(queue=queue)
                 self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
 
         msg = json.dumps(msg).encode('utf-8')
