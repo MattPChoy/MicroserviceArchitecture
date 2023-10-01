@@ -30,7 +30,6 @@ class UserManagement(Microservice):
         correlation_id = msg['correlation_id']
         self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.IN_PROGRESS)
 
-        self.logger.info(msg)
         assert 'id' in msg, "User id not defined"
 
         user = self.users_table.get(msg['id'])

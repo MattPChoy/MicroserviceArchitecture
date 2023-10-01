@@ -14,6 +14,11 @@ export default function Status() {
             return r.json()
         }).then((r) => {
             console.log(r);
+            document.getElementById("fuckyou").innerHTML = r;
         })
     })
+
+    return (
+        <div id="fuckyou"></div>
+    );
 }

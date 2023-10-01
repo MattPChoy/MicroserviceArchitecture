@@ -8,7 +8,15 @@ services:
       - '15672:15672'
     volumes:
       - rabbit_mqdata:/usr/share/rabbitmq/data
-
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    command: redis-server --port 6379 --loglevel warning
+    volumes:
+      - redis_cache:/data
+    networks:
+      - taskqueue
   gateway:
     build:
       context: ./gateway
@@ -22,9 +30,17 @@ services:
       context: ./microservice
     depends_on:
       - rabbit_mq
+    networks:
+      - taskqueue
 volumes:
   rabbit_mqdata:
     driver: local
   pgdata:
     driver: local
   postgres-data:
+    driver: local
+  redis_cache:
+    driver: local
+networks:
+  taskqueue:
+    driver: bridge

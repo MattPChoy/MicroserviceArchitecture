@@ -1,5 +1,7 @@
 import logging
 from fastapi import APIRouter, HTTPException
+from fastapi_cache.decorator import cache
+
 from Common.BusClient import BusClient
 from Common.TaskQueue import TaskQueue
 from Common.UserRequestType import UserRequestType
@@ -14,7 +16,7 @@ bus_client = BusClient()
 task_queue = TaskQueue()
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(asctime)s: %(message)s")
+logging.basicConfig(level=logging.WARNING, format="[%(levelname)s] %(asctime)s: %(message)s")
 
 
 @router.post("/")
@@ -71,6 +73,7 @@ async def update_user(user: User):
 
 
 @router.delete("/")
+@cache(expire=120)
 async def delete_user(id: str):
     correlation_id = task_queue.create_task()
 

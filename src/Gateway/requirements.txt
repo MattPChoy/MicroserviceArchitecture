@@ -4,3 +4,4 @@ pika
 redis
 psycopg2-binary
 jinja2
+fastapi-cache2[redis]

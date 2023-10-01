@@ -35,6 +35,23 @@ async def process_message(message: str):
             break
     return response
 
+
 @app.get("/")
 async def proc():
     return ""
+
+
+@app.get("/test-uncached")
+async def test_cache():
+    i = 0
+    for j in range(1, 10000):
+        i += j
+    return i
+
+
+@app.get("/test-uncached")
+async def test_cache():
+    i = 0
+    for j in range(1, 10000):
+        i += j
+    return i

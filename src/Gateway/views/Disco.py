@@ -14,7 +14,7 @@ bus_client = BusClient()
 task_queue = TaskQueue()
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(asctime)s: %(message)s")
+logging.basicConfig(level=logging.WARNING, format="[%(levelname)s] %(asctime)s: %(message)s")
 
 
 @router.get("/")
@@ -27,5 +27,4 @@ async def get_service_status():
     }
 
     bus_client.publish("disco", body)
-    logger.info("Hit")
     return await get_response(correlation_id)

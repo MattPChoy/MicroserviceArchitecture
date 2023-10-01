@@ -1,5 +1,7 @@
 import logging
 from fastapi import APIRouter, HTTPException
+from fastapi_cache.decorator import cache
+
 from Common.BusClient import BusClient
 from Common.TaskQueue import TaskQueue
 from Common.BatteryRequestType import BatteryRequestType
@@ -19,7 +21,7 @@ bus_client = BusClient()
 task_queue = TaskQueue()
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(asctime)s: %(message)s")
+logging.basicConfig(level=logging.WARNING, format="[%(levelname)s] %(asctime)s: %(message)s")
 
 
 @router.post("/")
@@ -40,13 +42,15 @@ async def add_battery(battery: Battery):
 
 
 @router.get("/")
-async def get_battery(battery_id: str):
+@cache(expire=120)
+async def get_battery(id: str):
+    logger.info("Cache not hit?!")
     correlation_id = task_queue.create_task()
 
     body = {
         "type": BatteryRequestType.GET_BATTERY.value,
         "correlation_id": correlation_id,
-        "battery_id": battery_id
+        "battery_id": id
     }
     bus_client.publish("battery", body)
     return await get_response(correlation_id=correlation_id)
