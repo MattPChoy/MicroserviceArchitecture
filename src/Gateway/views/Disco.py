@@ -27,5 +27,5 @@ async def get_service_status():
     }
 
     bus_client.publish("disco", body)
-
+    logger.info("Hit")
     return await get_response(correlation_id)

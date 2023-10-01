@@ -132,14 +132,14 @@ services:
       - rabbitmq
       - taskqueue
       - users_db_network
-  webgui:
-    ports:
-      - '5001:5001'
-    depends_on:
-      - gateway
-    build: ./webapp
-    networks:
-      - public
+#  webui:
+#    ports:
+#      - '5001:5001'
+#    depends_on:
+#      - gateway
+#    build: ./webapp
+#    networks:
+#      - public
 volumes:
   redis_cache:
     driver: local
