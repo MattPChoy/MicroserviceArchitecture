@@ -34,3 +34,7 @@ async def process_message(message: str):
                 return HTTPException(status_code=500, detail="Could not decode JSON response")
             break
     return response
+
+@app.get("/")
+async def proc():
+    return ""
