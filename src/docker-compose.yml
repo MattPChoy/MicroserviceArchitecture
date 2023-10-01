@@ -97,6 +97,7 @@ services:
     networks:
       - rabbitmq
       - taskqueue
+      - public
   batterymanagement:
     depends_on:
       - taskqueue
@@ -131,6 +132,14 @@ services:
       - rabbitmq
       - taskqueue
       - users_db_network
+  webgui:
+    ports:
+      - '5001:5001'
+    depends_on:
+      - gateway
+    build: ./webapp
+    networks:
+      - public
 volumes:
   redis_cache:
     driver: local
@@ -152,4 +161,6 @@ networks:
   users_db_network:
     driver: bridge
   batteries_db_network:
+    driver: bridge
+  public:
     driver: bridge
