@@ -4,11 +4,12 @@ import {
     createBrowserRouter,
     RouterProvider,
     Route,
-    Link,
+    Link, BrowserRouter, Routes,
 } from "react-router-dom";
 
 import Home from "./pages/Home"
 import Status from "./pages/Status"
+import Header from "./components/Header";
 
 const router = createBrowserRouter([
     {
@@ -24,5 +25,13 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")).render(
-    <RouterProvider router={router}/>
+    <BrowserRouter>
+        <Header/>
+        <main>
+            <Routes>
+                <Route path="/" element={<Home/>}/>
+                <Route path="/status" element={<Status/>}/>
+            </Routes>
+        </main>
+    </BrowserRouter>
 );

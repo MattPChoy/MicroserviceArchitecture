@@ -12,8 +12,8 @@ services:
   rabbit_mq:
     image: rabbitmq:3.12-management
     ports:
-      - "127.0.0.1:5672:5672"
-      - "127.0.0.1:15672:15672"
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - rabbitmq_data:/usr/share/rabbitmq/data
     networks:
@@ -21,7 +21,7 @@ services:
   batteries_db:
     image: postgres
     ports:
-      - '127.0.0.1:5432:5432'
+      - '5432:5432'
     restart: always
     environment:
       POSTGRES_USER: docker
@@ -98,6 +98,7 @@ services:
       - rabbitmq
       - taskqueue
       - public # For webapp
+    restart: always
   batterymanagement:
     depends_on:
       - taskqueue
@@ -132,19 +133,19 @@ services:
       - rabbitmq
       - taskqueue
       - users_db_network
-  webapp:
-    ports:
-      - '127.0.0.1:3000:3000'
-    environment:
-      CHOKIDAR_USEPOLLING: "true"
-    volumes:
-      - /app/node_modules
-      - ./webapp:/app
-    depends_on:
-      - gateway
-    build: ./webapp
-    networks:
-      - public
+#  webapp:
+#    ports:
+#      - '127.0.0.1:3000:3000'
+#    environment:
+#      CHOKIDAR_USEPOLLING: "true"
+#    volumes:
+#      - /app/node_modules
+#      - ./webapp:/app
+#    depends_on:
+#      - gateway
+#    build: ./webapp
+#    networks:
+#      - public
 volumes:
   redis_cache:
     driver: local

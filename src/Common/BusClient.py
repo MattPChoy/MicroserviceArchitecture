@@ -5,7 +5,7 @@ import logging
 import socket
 import uuid
 from .ServiceStatusType import ServiceStatusType
-from pika.exceptions import StreamLostError
+from pika.exceptions import StreamLostError, ChannelClosedByBroker
 
 
 def get_local_ip():
@@ -64,7 +64,6 @@ class BusClient:
                 self.channel.queue_declare(queue=queue)
                 self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
 
-
         msg = json.dumps(msg).encode('utf-8')
         try:
             _publish(msg, queue)
@@ -94,4 +93,12 @@ class BusClient:
         self.publish("disco", data)
 
     def start(self):
-        self.channel.start_consuming()
+        def _start():
+            self.channel.start_consuming()
+
+        try:
+            _start()
+        except ChannelClosedByBroker as e:
+            self.connection = self._get_connection()
+            self.channel = self.connection.channel()
+            _start()
