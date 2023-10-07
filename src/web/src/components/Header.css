@@ -1,0 +1,15 @@
+.header {
+    width: 100%;
+    background-color: var(--material-base-20);
+    padding: 10px 20px;
+    /* The box-sizing: border-box; attribute means that the width and height of the element factor
+     * in padding + margins
+     */
+    box-sizing: border-box;
+}
+
+.headerImg {
+    width: 30px;
+    margin-right: 10px;
+    transform: rotate(90deg);
+}
