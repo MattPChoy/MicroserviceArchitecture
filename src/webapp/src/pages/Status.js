@@ -1,25 +1,29 @@
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 
 export default function Status() {
+    const [services, setServices] = useState([]);
     useEffect(() => {
-        fetch("/api/v1/status", {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json"
-            },
-            mode: 'no-cors'
+        const data = fetch(
+            "http://localhost:5000/api/v1/status/",
+            {
+                    mode: 'cors',
+                    headers: {
+                        'Access-Control-Allow-Origin': "*",
+                    }
+                }
+        ).then((r) => {
+            return r.json()
         }).then((r) => {
+            setServices(r);
             console.log(r);
             document.getElementById("fuckyou").innerHTML = r;
-            //return r.json()
-        })//.then((r) => {
-        //     console.log(r);
-        //
-        // });
+        });
     });
 
     return (
-        <div id="fuckyou"></div>
+        <div>
+            <p>waawa</p>
+            <div id="fuckyou"/>
+        </div>
     );
 }

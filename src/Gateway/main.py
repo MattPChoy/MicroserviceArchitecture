@@ -5,6 +5,7 @@ from redis import asyncio as aioredis
 import logging
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from views import BatteryManagement, UserManagement, Disco
@@ -19,6 +20,14 @@ bus_client.send_discovery("Gateway")
 app.include_router(BatteryManagement.router)
 app.include_router(UserManagement.router)
 app.include_router(Disco.router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=True
+)
 
 
 @app.exception_handler(RequestValidationError)
