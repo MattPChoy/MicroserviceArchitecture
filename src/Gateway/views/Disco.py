@@ -1,5 +1,6 @@
 import logging
 from fastapi import APIRouter
+from fastapi_cache.decorator import cache
 
 from Common.BusClient import BusClient
 from Common.TaskQueue import TaskQueue
@@ -18,6 +19,7 @@ logging.basicConfig(level=logging.WARNING, format="[%(levelname)s] %(asctime)s: 
 
 
 @router.get("/")
+@cache(expire=120)
 async def get_service_status():
     correlation_id = task_queue.create_task()
 

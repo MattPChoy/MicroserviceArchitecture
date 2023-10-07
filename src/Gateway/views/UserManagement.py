@@ -38,6 +38,7 @@ async def add_user(user: User):
 
 
 @router.get("/")
+@cache(expire=120)
 async def get_user(id: str):
     if id == "":
         raise HTTPException(status_code=400, detail="id cannot be empty")

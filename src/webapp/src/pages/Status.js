@@ -11,12 +11,13 @@ export default function Status() {
             mode: 'no-cors'
         }).then((r) => {
             console.log(r);
-            return r.json()
-        }).then((r) => {
-            console.log(r);
             document.getElementById("fuckyou").innerHTML = r;
-        })
-    })
+            //return r.json()
+        })//.then((r) => {
+        //     console.log(r);
+        //
+        // });
+    });
 
     return (
         <div id="fuckyou"></div>

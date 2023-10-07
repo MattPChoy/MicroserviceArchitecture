@@ -64,12 +64,18 @@ class BusClient:
                 self.channel.queue_declare(queue=queue)
                 self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
 
+
         msg = json.dumps(msg).encode('utf-8')
         try:
             _publish(msg, queue)
         except pika.exceptions.StreamLostError:
             self.connection = self._get_connection()
             _publish(msg, queue)
+        except ConnectionResetError as e:
+            self.connection = self._get_connection()
+            self.channel = self.connection.channel()
+            self.channel.queue_declare(queue=queue)
+            self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
 
     def send_discovery(self, service_name: str):
         """

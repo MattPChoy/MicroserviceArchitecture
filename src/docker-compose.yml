@@ -3,7 +3,7 @@ services:
   taskqueue:
     image: redis:latest
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     command: redis-server --port 6379 --loglevel warning
     volumes:
       - redis_cache:/data
@@ -12,8 +12,8 @@ services:
   rabbit_mq:
     image: rabbitmq:3.12-management
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
     volumes:
       - rabbitmq_data:/usr/share/rabbitmq/data
     networks:
@@ -21,7 +21,7 @@ services:
   batteries_db:
     image: postgres
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     restart: always
     environment:
       POSTGRES_USER: docker
@@ -33,10 +33,10 @@ services:
       interval: 10s
       retries: 10
     # https://stackoverflow.com/questions/41637505/how-to-persist-data-in-a-dockerized-postgres-database-using-volumes
-    volumes:
-      - ./postgres-data-batteries:/var/lib/postgresql/data-batteries
-      - postgres-data-batteries:/var/lib/postgresql/data-batteries
-      - pgdata-batteries:/var/lib/postgresql/data-batteries
+#    volumes:
+#      - ./postgres-data-batteries:/var/lib/postgresql/data-batteries
+#      - postgres-data-batteries:/var/lib/postgresql/data-batteries
+#      - pgdata-batteries:/var/lib/postgresql/data-batteries
     # Makes DB slightly more performant
     command:
       - "postgres"
@@ -49,7 +49,7 @@ services:
   users_db:
     image: postgres
     ports:
-      - '5433:5433'
+      - '127.0.0.1:5433:5433'
     restart: always
     environment:
       POSTGRES_USER: docker
@@ -61,10 +61,10 @@ services:
       interval: 10s
       retries: 10
     # https://stackoverflow.com/questions/41637505/how-to-persist-data-in-a-dockerized-postgres-database-using-volumes
-    volumes:
-      - ./postgres-data-users:/var/lib/postgresql/data-users
-      - postgres-data-users:/var/lib/postgresql/data-users
-      - pgdata-users:/var/lib/postgresql/data-users
+#    volumes:
+#      - ./postgres-data-users:/var/lib/postgresql/data-users
+#      - postgres-data-users:/var/lib/postgresql/data-users
+#      - pgdata-users:/var/lib/postgresql/data-users
     # Makes DB slightly more performant
     command:
       - "postgres"
@@ -81,13 +81,13 @@ services:
       - users_db
       - batteries_db
     ports:
-      - '8080:8080'
+      - '127.0.0.1:8080:8080'
     networks:
       - users_db_network
       - batteries_db_network
   gateway:
     ports:
-      - '5000:5000'
+      - '127.0.0.1:5000:5000'
     depends_on:
       - taskqueue
       - rabbit_mq
@@ -97,7 +97,7 @@ services:
     networks:
       - rabbitmq
       - taskqueue
-      - public
+      - public # For webapp
   batterymanagement:
     depends_on:
       - taskqueue
@@ -132,14 +132,19 @@ services:
       - rabbitmq
       - taskqueue
       - users_db_network
-#  webui:
-#    ports:
-#      - '5001:5001'
-#    depends_on:
-#      - gateway
-#    build: ./webapp
-#    networks:
-#      - public
+  webapp:
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - /app/node_modules
+      - ./webapp:/app
+    depends_on:
+      - gateway
+    build: ./webapp
+    networks:
+      - public
 volumes:
   redis_cache:
     driver: local

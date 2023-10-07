@@ -91,18 +91,19 @@ class BatteryManagement(Microservice):
 
     def callback(self, channel, method, properties, body):
         _msg = body.decode('utf-8')
+        # channel.basic_ack(delivery_tag=method.delivery_tag)
         try:
             msg = json.loads(_msg)
         except JSONDecodeError as error:
             self.logger.error(f"Request type unknown {error}")
-            channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
+            # channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
             return
 
         try:
             request_type = BatteryRequestType(msg.get("type", None))
         except ValueError:
             self.logger.error(f"Invalid request type: {msg.get('type', None)}")
-            channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
+            # channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
             return
 
         if request_type == BatteryRequestType.ADD_BATTERY:
@@ -114,11 +115,11 @@ class BatteryManagement(Microservice):
         elif request_type == BatteryRequestType.DELETE_BATTERY:
             self.delete_battery_from_guid(msg)
 
-        channel.basic_ack(delivery_tag=method.delivery_tag)
+        # channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def start(self):
         self.bus_client.channel.queue_declare(queue="battery")
-        self.bus_client.channel.basic_consume(queue="battery", on_message_callback=self.callback)
+        self.bus_client.channel.basic_consume(queue="battery", on_message_callback=self.callback, auto_ack=True)
         self.bus_client.start()
 
 
