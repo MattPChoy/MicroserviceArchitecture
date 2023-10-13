@@ -1,0 +1,17 @@
+.formElementContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+input {
+    height: 30px;
+    background-color: var(--material-base-20);
+    border-radius: 7px;
+    border: 1px solid var(--primary);
+    margin: 10px 0;
+    color: var(--text-primary);
+}
+
+.formValidation {
+    color: var(--danger)
+}

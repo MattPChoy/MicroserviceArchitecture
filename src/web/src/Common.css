@@ -4,10 +4,19 @@
     --material-base-20: #1D2129;
     --text-primary: #FFFFFF;
     --text-secondary: #CCCCCC;
+    --primary: #0D6CE8;
+    --success: #1EA51D;
+    --secondary: #A51DA5;
+    --warning: #FFCD05;
+    --danger: #D62237;
     background-color: var(--material-base);
     padding: 0;
     width: 100%;
     height: 100%;
+}
+
+h1, h2, h3, h4, h5, p, span, label {
+    color: white;
 }
 
 body {

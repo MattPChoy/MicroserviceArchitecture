@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import ServiceCard from "../components/ServiceCard.jsx";
-import "../App.css"
+import "../Common.css"
 
 function updateServices(setServices) {
     console.log("Updating alive services")
