@@ -57,12 +57,12 @@ class BatteryTable:
         return self.cursor.fetchone()
 
     def get_all_owned_by(self, uid: int):
-        self.cursor.execute('SELECT * FROM "public".BATTERIES WHERE uid=%s', (uid,))
+        self.cursor.execute('SELECT * FROM "public".BATTERIES WHERE owner=%s', (uid,))
         return self.cursor.fetchall()
 
     def update(self, owner: str, id: int, name: str, capacity: int, charge: int):
         self.cursor.execute(
-            'UPDATE "public".BATTERIES SET owner = %s, name = %s, capacity = %s, charge = %s WHERE id = %s',
+            'UPDATE "public".BATTERIES SET owner = %s, name  = %s, capacity = %s, charge = %s WHERE id = %s',
             (owner, name, capacity, charge, id))
         self.db.commit()
 

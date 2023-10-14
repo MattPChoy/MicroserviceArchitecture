@@ -58,6 +58,25 @@ class BatteryManagement(Microservice):
         self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
                                payload={"battery_data": dict(zip(self.battery_table.column_names, battery))})
 
+    def get_batteries_owned_by(self, msg: dict):
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
+        if (batteries := self.battery_table.get_all_owned_by(msg['owner_id'])) is None:
+            self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
+                                   payload={"battery_data": [], "desc": "No batteries corresponding to this owner id."})
+            return
+        elif batteries is False:  # Some sort of SQL error
+            self.logger.warn(f"Task failed as a result of SQL error (battery={batteries})")
+            self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.FAILED)
+            return
+
+        assert batteries is not None, f"Battery to be returned is none (correlation_id={correlation_id}"
+        batteries = [dict(zip(self.battery_table.column_names, battery)) for battery in batteries]
+        self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
+                               payload={"battery_data": batteries})
+
     def update_battery_from_guid(self, msg):
         assert "correlation_id" in msg, "Correlation_id not defined"
         correlation_id = msg['correlation_id']
@@ -109,7 +128,10 @@ class BatteryManagement(Microservice):
         if request_type == BatteryRequestType.ADD_BATTERY:
             self.add_battery(msg)
         elif request_type == BatteryRequestType.GET_BATTERY:
-            self.get_battery_from_guid(msg)
+            if "owner_id" in msg:
+                self.get_batteries_owned_by(msg)
+            else:
+                self.get_battery_from_guid(msg)
         elif request_type == BatteryRequestType.UPDATE_BATTERY:
             self.update_battery_from_guid(msg)
         elif request_type == BatteryRequestType.DELETE_BATTERY:

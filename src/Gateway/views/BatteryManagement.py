@@ -1,4 +1,6 @@
 import logging
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException
 from fastapi_cache.decorator import cache
 
@@ -21,7 +23,7 @@ bus_client = BusClient()
 task_queue = TaskQueue()
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.WARNING, format="[%(levelname)s] %(asctime)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(asctime)s: %(message)s")
 
 
 @router.post("/")
@@ -42,15 +44,34 @@ async def add_battery(battery: Battery):
 
 
 @router.get("/")
-@cache(expire=120)
-async def get_battery(id: str):
+# @cache(expire=120)
+async def get_battery(id: int = None, owner_id: int = None):
+
+    if id is None and owner_id is None:
+        return HTTPException(422, "GET request must only contain one of battery ID or owner ID but contains none")
+    if id is not None and owner_id is not None:
+        return HTTPException(422, "GET request must only contain one of battery ID or owner ID but contains both")
+
     logger.info("Cache not hit?!")
+
+    if id is not None:
+        correlation_id = task_queue.create_task()
+
+        body = {
+            "type": BatteryRequestType.GET_BATTERY.value,
+            "correlation_id": correlation_id,
+            "battery_id": id
+        }
+        bus_client.publish("battery", body)
+        return await get_response(correlation_id=correlation_id)
+
+    # Handle the retrieval of all batteries owned by a particular owner
     correlation_id = task_queue.create_task()
 
     body = {
         "type": BatteryRequestType.GET_BATTERY.value,
         "correlation_id": correlation_id,
-        "battery_id": id
+        "owner_id": owner_id
     }
     bus_client.publish("battery", body)
     return await get_response(correlation_id=correlation_id)

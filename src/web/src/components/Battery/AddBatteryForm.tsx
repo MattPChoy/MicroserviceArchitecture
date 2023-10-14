@@ -3,46 +3,49 @@ import "./AddBatteryForm.css";
 import {useState} from "react";
 
 export default function AddBatteryForm() {
-    const [isInvalid, setIsInvalid] = useState({});
-    const formIsInvalid = Object.keys(isInvalid).map(
-        (value: string) => isInvalid[value]).some((value: boolean) => {
-        return value === undefined || value === false
-    }) || Object.keys(isInvalid).length === 0;
-
-    console.log(isInvalid);
-    console.log(formIsInvalid);
-
-    function handleFormSubmit(e : any) {
-        e.preventDefault();
-        const formData = {
-            nickname: document.getElementById("batteryNickname").value,
-            capacity: document.getElementById("batteryCapacity").value,
+    const [formData, setFormData] = useState({
+        capacity: "", name: ""
+    })
+    function handleFormSubmit(event) {
+        event.preventDefault();
+        const data = {
+            name: formData.name,
+            capacity: formData.capacity,
             charge: 0,
-            owner_id: 0,
+            owner: 0,
         }
 
-        fetch('http://localhost:3001/battery', {
-            method: 'POST',
+        fetch('http://localhost:5000/api/v1/battery/', {
+            method: "POST",
+            body: JSON.stringify(data),
             headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        }).then((response) => {
-            console.log(response);
-            if (response.status === 200) {
-                alert('Battery added successfully!');
+                "Content-type": "application/json; charset=UTF-8",
+                "Access-Control-Allow-Origin": "*"
             }
+        }).then((data) => {
+            console.log(data);
+        });
+    }
+
+    const formIsInvalid = formData.capacity.length === 0 || formData.name.length === 0;
+
+    function handleChange(e) {
+        setFormData({
+            ...formData,
+            [e.target.id]: e.target.value
         });
     }
 
     return (
         <form className="form addBatteryForm">
             <h2>Add Battery</h2>
-            <TextField id='batteryNickname' label='Battery Short Name' style={{"paddingBottom": '30px'}}
-                       variant='outlined'/>
-            <TextField id='batteryCapacity' label='Battery Capacity' style={{"paddingBottom": '30px'}}
-                       variant='outlined'/>
-            <button onClick={handleFormSubmit} style={{"width": "300px"}} className="formSubmit">Add Battery</button>
+            <TextField id='name' label='Battery Short Name' style={{"paddingBottom": '30px', color: 'white'}}
+                       variant='outlined' sx={{input: {color: 'white'}}} InputLabelProps={{style: {color: 'white'}}} required={true}
+                        value={formData.name} onChange={handleChange}/>
+            <TextField id='capacity' label='Battery Capacity' style={{"paddingBottom": '30px'}}
+                       variant='outlined' sx={{input: {color: 'white'}}} InputLabelProps={{style: {color: 'white'}}} required={true}
+                        value={formData.capacity} onChange={handleChange} type='number'/>
+            <button onClick={handleFormSubmit} style={{"width": "300px"}} className="formSubmit" disabled={formIsInvalid}>Add Battery</button>
         </form>
     );
 }
