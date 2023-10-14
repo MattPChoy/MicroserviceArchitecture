@@ -9,6 +9,13 @@ services:
       - redis_cache:/data
     networks:
       - taskqueue
+  reservations:
+    image: redis:latest
+    ports:
+      - "127.0.0.1:6380:6380"
+    command: redis-server --port 6380 --loglevel warning
+    networks:
+      - reservations_net
   rabbit_mq:
     image: rabbitmq:3.12-management
     ports:
@@ -110,6 +117,7 @@ services:
     networks:
       - rabbitmq
       - taskqueue
+      - reservations_net
       - batteries_db_network
   disco:
     depends_on:
@@ -169,4 +177,6 @@ networks:
   batteries_db_network:
     driver: bridge
   public:
+    driver: bridge
+  reservations_net:
     driver: bridge

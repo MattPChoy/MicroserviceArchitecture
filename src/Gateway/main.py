@@ -8,7 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from views import BatteryManagement, UserManagement, Disco
+from views import BatteryManagement, UserManagement, Disco, Stations
 from Common.BusClient import BusClient
 
 app = FastAPI()
@@ -20,6 +20,7 @@ bus_client.send_discovery("Gateway")
 app.include_router(BatteryManagement.router)
 app.include_router(UserManagement.router)
 app.include_router(Disco.router)
+app.include_router(Stations.router)
 
 app.add_middleware(
     CORSMiddleware,

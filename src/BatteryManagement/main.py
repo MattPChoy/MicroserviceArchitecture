@@ -5,12 +5,14 @@ from Common.TaskQueue import TaskStatus, TaskQueue
 from Common.BatteryRequestType import BatteryRequestType
 from Common.Microservice import Microservice
 from Gateway.models import BatteryTable
+from Gateway.models.Stations import StationsTable
 
 
 class BatteryManagement(Microservice):
     def __init__(self):
         super().__init__()
         self.battery_table = BatteryTable()
+        self.stations_table = StationsTable()
         self.task_queue = TaskQueue()
         self.bus_client.send_discovery(type(self).__name__)
 
@@ -108,6 +110,94 @@ class BatteryManagement(Microservice):
         self.logger.info(f"Battery delete succeeded (battery_id={msg['id']}, correlation_id={correlation_id})")
         self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED, payload={})
 
+    def get_bss_station(self, msg):
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
+        assert "id" in msg, "Station ID not defined"
+        station = self.stations_table.get(msg["id"])
+        self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
+                               payload={"station": station})
+
+    def get_bss_stations(self, msg):
+        """
+        Retrieve all BSS stations registered to this deployment of the microservice application.
+        :param msg:
+        :return:
+        """
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
+        stations = self.stations_table.get_all()
+        column_names = [name for name in self.stations_table.column_names if stations is not 'active']
+        stations = [dict(zip(column_names, station)) for station in stations]
+        self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
+                               payload={"stations": stations})
+
+    def get_closest_bss_stations(self, msg):
+        """
+        Retrieve the n closest BSS stations to the specified location.
+        :param msg:
+        :return:
+        """
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
+        assert "lat" in msg, "Latitude not defined"
+        assert "lon" in msg, "Longitude not defined"
+        assert "n" in msg, "Number of stations to retrieve not defined"
+
+        stations = self.stations_table.get_n_closest(msg["lat"], msg["lon"], msg["n"])
+        self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
+                               payload={"stations": stations})
+
+    def add_bss_station(self, msg):
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
+        assert "lat" in msg, "Latitude not defined"
+        assert "lon" in msg, "Longitude not defined"
+        assert "name" in msg, "Name not defined"
+
+        station_id = self.stations_table.add(msg["lat"], msg["lon"], msg["name"])
+        self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED,
+                               payload={"station_id": station_id})
+
+    def update_bss_station(self, msg):
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
+        assert "id" in msg, "Station ID not defined"
+        assert "lat" in msg, "Latitude not defined"
+        assert "lon" in msg, "Longitude not defined"
+        assert "name" in msg, "Name not defined"
+
+        self.stations_table.update(msg["id"], msg["lat"], msg["lon"], msg["name"])
+        self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED, payload={})
+
+    def delete_bss_station(self, msg):
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
+        assert "id" in msg, "Station ID not defined"
+
+        self.stations_table.delete(msg["id"])
+        self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED, payload={})
+
+    def reserve_battery(self, msg):
+        assert "correlation_id" in msg, "Correlation_id not defined"
+        assert "battery_id" in msg, "Battery ID not defined"
+        assert "user_id" in msg, "User ID not defined"
+        assert "duration" in msg, "Reservation duration not defined"
+        correlation_id = msg['correlation_id']
+        self.task_queue.update(correlation_id, TaskStatus.IN_PROGRESS)
+
     def callback(self, channel, method, properties, body):
         _msg = body.decode('utf-8')
         # channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -125,9 +215,11 @@ class BatteryManagement(Microservice):
             # channel.basic_reject(delivery_tag=method.delivery_tag, requeue=False)
             return
 
+        self.logger.info(msg)
         if request_type == BatteryRequestType.ADD_BATTERY:
             self.add_battery(msg)
         elif request_type == BatteryRequestType.GET_BATTERY:
+            # TODO: Maybe this should be separated into two different request types.
             if "owner_id" in msg:
                 self.get_batteries_owned_by(msg)
             else:
@@ -136,8 +228,20 @@ class BatteryManagement(Microservice):
             self.update_battery_from_guid(msg)
         elif request_type == BatteryRequestType.DELETE_BATTERY:
             self.delete_battery_from_guid(msg)
-
-        # channel.basic_ack(delivery_tag=method.delivery_tag)
+        elif request_type == BatteryRequestType.GET_STATION:
+            self.get_bss_station(msg)
+        elif request_type == BatteryRequestType.GET_STATIONS:
+            self.get_bss_stations(msg)
+        elif request_type == BatteryRequestType.GET_CLOSEST_STATIONS:
+            self.get_closest_bss_stations(msg)
+        elif request_type == BatteryRequestType.ADD_STATION:
+            self.add_bss_station(msg)
+        elif request_type == BatteryRequestType.UPDATE_STATION:
+            self.update_bss_station(msg)
+        elif request_type == BatteryRequestType.DELETE_STATION:
+            self.delete_bss_station(msg)
+        elif request_type == BatteryRequestType.BATTERY_RESERVATION:
+            self.reserve_battery(msg)
 
     def start(self):
         self.bus_client.channel.queue_declare(queue="battery")
