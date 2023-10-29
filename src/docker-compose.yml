@@ -5,17 +5,8 @@ services:
     ports:
       - "127.0.0.1:6379:6379"
     command: redis-server --port 6379 --loglevel warning
-    volumes:
-      - redis_cache:/data
     networks:
       - taskqueue
-  reservations:
-    image: redis:latest
-    ports:
-      - "127.0.0.1:6380:6380"
-    command: redis-server --port 6380 --loglevel warning
-    networks:
-      - reservations_net
   rabbit_mq:
     image: rabbitmq:3.12-management
     ports:
@@ -155,8 +146,6 @@ services:
 #    networks:
 #      - public
 volumes:
-  redis_cache:
-    driver: local
   rabbitmq_data:
     driver: local
   pgdata-batteries:

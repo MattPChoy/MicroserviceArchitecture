@@ -55,9 +55,7 @@ class Disco(Microservice):
             self.task_queue.update(correlation_id=correlation_id, status=TaskStatus.SUCCEEDED, payload=self.services)
 
     def start(self):
-        self.bus_client.channel.queue_declare(queue="disco")
-        self.bus_client.channel.basic_consume(queue="disco", on_message_callback=self.callback)
-        self.bus_client.start()
+        self.bus_client.start(queue="disco", callback=self.callback, auto_ack=False)
 
 
 if __name__ == "__main__":
