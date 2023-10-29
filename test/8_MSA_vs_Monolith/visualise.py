@@ -36,7 +36,7 @@ plt.scatter(x_microservice, y_microservice, color='steelblue', label='Microservi
 
 # Label the axes
 plt.xlabel('Number of Instances')
-plt.ylabel('Throughput (req/s)')
+plt.ylabel('Throughput (r/s)')
 
 # Add a legend
 plt.legend()
