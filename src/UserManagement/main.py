@@ -115,9 +115,7 @@ class UserManagement(Microservice):
         #         f"Task not in a completed state but execution has finished: {task_status}, {correlation_id}")
 
     def start(self):
-        self.bus_client.channel.queue_declare(queue='users')
-        self.bus_client.channel.basic_consume(queue='users', on_message_callback=self.callback, auto_ack=True)
-        self.bus_client.start()
+        self.bus_client.start(queue='users', callback=self.callback, auto_ack=False)
 
 
 if __name__ == "__main__":

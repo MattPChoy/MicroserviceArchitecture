@@ -38,7 +38,7 @@ async def add_user(user: User):
 
 
 @router.get("/")
-@cache(expire=120)
+@cache(expire=5000)
 async def get_user(id: str):
     if id == "":
         raise HTTPException(status_code=400, detail="id cannot be empty")
@@ -74,7 +74,6 @@ async def update_user(user: User):
 
 
 @router.delete("/")
-@cache(expire=120)
 async def delete_user(id: str):
     correlation_id = task_queue.create_task()
 

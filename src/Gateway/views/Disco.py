@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.WARNING, format="[%(levelname)s] %(asctime)s: 
 
 
 @router.get("/")
-@cache(expire=120)
+@cache(expire=5000)
 async def get_service_status():
     correlation_id = task_queue.create_task()
 

@@ -23,7 +23,7 @@ bus_client = BusClient()
 task_queue = TaskQueue()
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(asctime)s: %(message)s")
+logging.basicConfig(level=logging.WARNING, format="[%(levelname)s] %(asctime)s: %(message)s")
 
 
 @router.post("/")
@@ -44,7 +44,7 @@ async def add_battery(battery: Battery):
 
 
 @router.get("/")
-# @cache(expire=120)
+@cache(expire=5000)
 async def get_battery(id: int = None, owner_id: int = None):
 
     if id is None and owner_id is None:

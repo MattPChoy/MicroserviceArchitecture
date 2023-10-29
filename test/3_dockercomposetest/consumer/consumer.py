@@ -22,10 +22,8 @@ def receive_msg(ch, method, properties, body):
     sleep for 2 seconds
     ack the message"""
 
-    print('received msg : ', body.decode('utf-8'))
-    time.sleep(1)
-    print('acking it')
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+    #ch.basic_ack(delivery_tag=method.delivery_tag)
+    pass
 
 
 # to make sure the consumer receives only one message at a time
@@ -34,7 +32,7 @@ chan.basic_qos(prefetch_count=1)
 
 # define the queue consumption
 chan.basic_consume(queue='hello',
-                   on_message_callback=receive_msg)
+                   on_message_callback=receive_msg, auto_ack=True)
 
 print("Waiting to consume")
 # start consuming

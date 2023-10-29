@@ -244,9 +244,7 @@ class BatteryManagement(Microservice):
             self.reserve_battery(msg)
 
     def start(self):
-        self.bus_client.channel.queue_declare(queue="battery")
-        self.bus_client.channel.basic_consume(queue="battery", on_message_callback=self.callback, auto_ack=True)
-        self.bus_client.start()
+        self.bus_client.start(queue="battery", callback=self.callback, auto_ack=False)
 
 
 if __name__ == "__main__":
