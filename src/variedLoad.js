@@ -11,10 +11,10 @@ const percentile = (pct, arr) => {
     return sortedArr[index];
 };
 
-const readMult = 0.85;
+const readMult = 0.70;
 const executor = 'constant-vus';
 const battery = 400;
-const user = 200;
+const user = 400;
 const status = 100;
 const duration = "2m";
 
