@@ -2,6 +2,7 @@ import {sleep} from 'k6';
 import http from 'k6/http';
 import { Trend, Rate } from 'k6/metrics';
 
+const hostRoot = "http://10.0.0.10";
 
 const response_times = new Trend('response_times');
 const percentile = (pct, arr) => {
@@ -61,13 +62,13 @@ function getRandInt(min, max) {
 }
 
 export function getStatus() {
-    let resp = http.get(`http://localhost:5000/api/v1/status/`);
+    let resp = http.get(`${hostRoot}:5000/api/v1/status/`);
     response_times.add(resp.timings.duration);
 }
 
 export function getBattery() {
     const uid = getRandInt(1, 1);
-    http.get(`http://localhost:5000/api/v1/battery/?id=${uid}`)
+    http.get(`${hostRoot}:5000/api/v1/battery/?id=${uid}`)
 }
 
 export function addBattery() {
@@ -79,7 +80,7 @@ export function addBattery() {
     })
     const headers = {'Content-Type': 'application/json'};
     http.post(
-        `http://localhost:5000/api/v1/battery/`,
+        `${hostRoot}:5000/api/v1/battery/`,
         payload,
         {
             headers: {'Content-Type': 'application/json'},
@@ -89,7 +90,7 @@ export function addBattery() {
 
 export function getUser() {
     const uid = getRandInt(1, 1);
-    http.get(`http://localhost:5000/api/v1/user/?id=${uid}`)
+    http.get(`${hostRoot}:5000/api/v1/user/?id=${uid}`)
 }
 
 export function addUser() {
@@ -102,7 +103,7 @@ export function addUser() {
     })
     const headers = {'Content-Type': 'application/json'};
     http.post(
-        `http://localhost:5000/api/v1/user/`,
+        `${hostRoot}:5000/api/v1/user/`,
         payload,
         {
             headers: {'Content-Type': 'application/json', Accept: "*/*"},
