@@ -12,6 +12,13 @@ The services that were implemented and their corresponding directories are:
 - [UserManagement](./UserManagement): This service is responsible for storing and manipulating user records.
 - [Discovery](./Disco): This service is responsible for keeping a record of all alive services.
 
+# Codebase Structure
+- Within the [Gateway](./Gateway) directory lies two key subdirectories:
+  - The [models](./Gateway/models) directory contains all data models used to represent concepts within the system. 
+    - Each concept has a Pydantic object used for FastAPI attribute validation, and a corresponding Table class which abstracts the connection to the respective database implementation
+  - The [views](./Gateway/views) directory contains the FastAPI Routers that are responsible for routing requests, and awaiting the responses from individual microservices.
+- The [Common](./Common) directory defines behaviour that is used through all system subdomains.
+  - It provides a single-source-of-truth for how microservices should interact with the message bus through the [BusClient](./Common/BusClient.py) as well as a common framework for how all the microservices are implemented through the [Microservice](./Common/Microservice.py) class. 
 # Load Testing
 To perform load testing on the software architecture, [k6](https://k6.io/) was used. The primary test script used for
 the load testing of the system is [variedLoad.js](./variedLoad.js). The script can be run as follows:
