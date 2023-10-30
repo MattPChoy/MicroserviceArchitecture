@@ -1,13 +1,22 @@
 import {sleep} from 'k6';
 import http from 'k6/http';
+import { Trend, Rate } from 'k6/metrics';
 
-const readMult = 1;
-const battery = 30;
-const user = 30;
-const status = 15;
+const hostRoot = "http://10.0.0.10";
 
-const duration = '2m';
+const response_times = new Trend('response_times');
+const percentile = (pct, arr) => {
+    const sortedArr = arr.sort((a, b) => a - b);
+    const index = Math.ceil(pct / 100 * sortedArr.length) - 1;
+    return sortedArr[index];
+};
+
+const readMult = 0.70;
 const executor = 'constant-vus';
+const battery = 400;
+const user = 400;
+const status = 100;
+const duration = "2m";
 
 export const options = {
     discardResponseBodies: true,
@@ -18,30 +27,30 @@ export const options = {
             vus: Math.floor(battery * readMult),
             duration: duration,
         },
-//        addBattery: {
-//            executor: 'constant-vus',
-//            exec: 'addBattery',
-//            vus: battery - Math.floor(battery * readMult),
-//            duration: duration
-//        },
+        addBattery: {
+            executor: 'constant-vus',
+            exec: 'addBattery',
+            vus: battery - Math.floor(battery * readMult),
+            duration: duration
+        },
         getUser: {
             executor: 'constant-vus',
             exec: 'getUser',
             vus: Math.floor(user * readMult),
             duration: duration
         },
-        //addUser: {
-        //    executor: 'constant-vus',
-        //    exec: 'addUser',
-        //    vus: user - Math.floor(battery * readMult),
-        //    duration: duration
-        //},
-        // getStatus: {
-        //     executor: 'constant-vus',
-        //     exec: 'getStatus',
-        //     vus: status,
-        //     duration: duration
-        // }
+        addUser: {
+            executor: 'constant-vus',
+            exec: 'addUser',
+            vus: user - Math.floor(user * readMult),
+            duration: duration
+        },
+         getStatus: {
+             executor: 'constant-vus',
+             exec: 'getStatus',
+             vus: status,
+             duration: duration
+         }
     },
 };
 
@@ -53,12 +62,13 @@ function getRandInt(min, max) {
 }
 
 export function getStatus() {
-    http.get(`http://localhost:5000/api/v1/status/`)
+    let resp = http.get(`${hostRoot}:5000/api/v1/status/`);
+    response_times.add(resp.timings.duration);
 }
 
 export function getBattery() {
-    const uid = getRandInt(1, battery);
-    http.get(`http://localhost:5000/api/v1/battery/?id=${uid}`)
+    const uid = getRandInt(1, 1);
+    http.get(`${hostRoot}:5000/api/v1/battery/?id=${uid}`)
 }
 
 export function addBattery() {
@@ -70,7 +80,7 @@ export function addBattery() {
     })
     const headers = {'Content-Type': 'application/json'};
     http.post(
-        `http://localhost:5000/api/v1/battery/`,
+        `${hostRoot}:5000/api/v1/battery/`,
         payload,
         {
             headers: {'Content-Type': 'application/json'},
@@ -79,8 +89,8 @@ export function addBattery() {
 }
 
 export function getUser() {
-    const uid = getRandInt(1, user);
-    http.get(`http://localhost:5000/api/v1/user/?id=${uid}`)
+    const uid = getRandInt(1, 1);
+    http.get(`${hostRoot}:5000/api/v1/user/?id=${uid}`)
 }
 
 export function addUser() {
@@ -93,7 +103,7 @@ export function addUser() {
     })
     const headers = {'Content-Type': 'application/json'};
     http.post(
-        `http://localhost:5000/api/v1/user/`,
+        `${hostRoot}:5000/api/v1/user/`,
         payload,
         {
             headers: {'Content-Type': 'application/json', Accept: "*/*"},

@@ -1,7 +1,8 @@
 # Test and Experiments
-This directory within the repository represents a series of little tests conducted to aid the development of the
-microservice architecture for my thesis project.
+This directory represents the experimentation conducted to aid the development of the architecture, 
+to understand how the technologies work, and their limitations. The tests featured in the thesis are:
 
-1. [Publisher and Subscriber](./1_Pubsub/README.md) Minimal RabbitMQ Publisher and Subscriber example.
-2. [Persistent Pub/Sub](./2_PersistentPubSub/README.md) RabbitMQ Pub/Sub example with persistent messages even if the consumer dies.
-3. [Docker RabbitMQ Containers](./3_dockercomposetest/README.md) Docker container orchestration of minimal pub/sub pattern.
+1. [Microservice vs Monolith Scaling](./8_MSA_vs_Monolith)
+2. [Message Bus Validation](./3_dockercomposetest)
+3. [Database Performance](./6_Postgres)
+4. [API Gateway Caching](./9_RMQ_FastAPI)

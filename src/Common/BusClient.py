@@ -5,7 +5,7 @@ import logging
 import socket
 import uuid
 from .ServiceStatusType import ServiceStatusType
-from pika.exceptions import StreamLostError, ChannelClosedByBroker
+from pika.exceptions import StreamLostError, ChannelClosedByBroker, ChannelWrongStateError
 
 
 def get_local_ip():
@@ -33,6 +33,7 @@ class BusClient:
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(asctime)s: %(message)s")
         self.channel = self.connection.channel()
+        self.USE_STREAMS = False
         # Hostname is used in the AMQP_URL and is the name of the docker container.
 
     def _get_connection(self):
@@ -43,6 +44,14 @@ class BusClient:
         # AMQP_URL = os.environ.get("AMQP_URL", "amqp://rabbit_mq?connection_attempts=10&retry_delay=10")
         AMQP_URL = f"amqp://{self.hostname}?connection_attempts=10&retry_delay=10"
         return pika.BlockingConnection(pika.URLParameters(AMQP_URL))
+
+    def create_queue(self, name):
+        args = {'x-queue-type': 'stream'} if self.USE_STREAMS else {}
+        try:
+            self.channel.queue_declare(name, durable=True, arguments=args)
+        except ChannelWrongStateError:
+            self.channel = self.connection.channel()
+            self.channel.queue_declare(name, durable=True, arguments=args)
 
     def publish(self, queue: str, msg: dict):
         """
@@ -55,13 +64,13 @@ class BusClient:
         def _publish(msg, queue):
 
             try:
-                self.channel.queue_declare(queue=queue)
+                self.create_queue(queue)
                 self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
             except StreamLostError as e:
                 self.logger.warning(f"StreamLostError: {e}")
                 self.connection = self._get_connection()
                 self.channel = self.connection.channel()
-                self.channel.queue_declare(queue=queue)
+                self.create_queue(queue)
                 self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
 
         msg = json.dumps(msg).encode('utf-8')
@@ -73,7 +82,7 @@ class BusClient:
         except ConnectionResetError as e:
             self.connection = self._get_connection()
             self.channel = self.connection.channel()
-            self.channel.queue_declare(queue=queue)
+            self.create_queue(queue)
             self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
 
     def send_discovery(self, service_name: str):
@@ -92,9 +101,22 @@ class BusClient:
         }
         self.publish("disco", data)
 
-    def start(self):
+    def start(self, queue, callback, auto_ack=False):
+
+        def _callback(channel, method, properties, body):
+            channel.basic_ack(delivery_tag=method.delivery_tag)
+            callback(channel, method, properties, body)
+
         def _start():
             self.channel.start_consuming()
+
+        self.create_queue(queue)
+
+        if self.USE_STREAMS:
+            self.channel.basic_qos(prefetch_count=5)
+            self.channel.basic_consume(queue=queue, on_message_callback=_callback, auto_ack=auto_ack)
+        else:
+            self.channel.basic_consume(queue=queue, on_message_callback=callback, auto_ack=True)
 
         try:
             _start()
