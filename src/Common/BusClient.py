@@ -62,9 +62,8 @@ class BusClient:
         assert "correlation_id" in msg, f"Message must contain a correlation id"
 
         def _publish(msg, queue):
-
             try:
-                self.create_queue(queue)
+                # self.create_queue(queue)
                 self.channel.basic_publish(exchange="", routing_key=queue, body=msg)
             except StreamLostError as e:
                 self.logger.warning(f"StreamLostError: {e}")
@@ -102,6 +101,7 @@ class BusClient:
         self.publish("disco", data)
 
     def start(self, queue, callback, auto_ack=False):
+        self.create_queue(queue)
 
         def _callback(channel, method, properties, body):
             channel.basic_ack(delivery_tag=method.delivery_tag)
