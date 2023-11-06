@@ -41,6 +41,10 @@ const status = 100;
 const duration = "2m";
 ```
 
+The [constantLoad](./constantLoad.js) script was used in the request duration test, to modulate the throughput volume.
+
+```bash
+
 # Web UI
 A small web user interface has been implemented, and is available in the [web](./web) directory. To get started, install `npm` and run the following commands:
 
